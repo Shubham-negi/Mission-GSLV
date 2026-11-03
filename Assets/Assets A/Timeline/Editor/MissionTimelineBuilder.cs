@@ -34,6 +34,8 @@ namespace GslvMission.EditorTools
         const string TexFolder = Folder + "/Textures";
         const string TimelinePath = Folder + "/GSLV Mission.playable";
         const string Trigger = Folder + "/Editor/BUILD_TIMELINE_ONCE.txt";
+        const string PlumeUpgradeTrigger = Folder + "/Editor/UPGRADE_PLUMES_ONCE.txt";
+        const string MainScenePath = "Assets/Assets A/Scene/Scene 1.unity";
         const string VoFolder = "Assets/Assets A/VoiceOver";
         const string SfxFolder = "Assets/Assets A/SFX";
         const string GslvModelPath = "Assets/Assets A/Art/FBX/GSLV Rocket/gslv rocket model com.fbx";
@@ -117,6 +119,7 @@ namespace GslvMission.EditorTools
         static MissionTimelineBuilder()
         {
             if (File.Exists(Trigger)) EditorApplication.delayCall += RunFromTrigger;
+            if (File.Exists(PlumeUpgradeTrigger)) EditorApplication.delayCall += RunPlumeUpgradeFromTrigger;
         }
 
         static void RunFromTrigger()
@@ -130,6 +133,63 @@ namespace GslvMission.EditorTools
             AssetDatabase.DeleteAsset(Trigger);
             if (File.Exists(Trigger)) File.Delete(Trigger);
             Run(false);
+        }
+
+        // Applies the improved plume to the already-generated scene without rebuilding the mission. This is kept
+        // separate because a plume-only visual update should not depend on source FBX files or replace other work.
+        static void RunPlumeUpgradeFromTrigger()
+        {
+            if (!File.Exists(PlumeUpgradeTrigger)) return;
+            if (EditorApplication.isPlayingOrWillChangePlaymode || EditorApplication.isCompiling || EditorApplication.isUpdating)
+            {
+                EditorApplication.delayCall += RunPlumeUpgradeFromTrigger;
+                return;
+            }
+
+            AssetDatabase.DeleteAsset(PlumeUpgradeTrigger);
+            if (File.Exists(PlumeUpgradeTrigger)) File.Delete(PlumeUpgradeTrigger);
+
+            Scene target = SceneManager.GetSceneByPath(MainScenePath);
+            bool openedHere = !target.IsValid() || !target.isLoaded;
+            if (openedHere) target = EditorSceneManager.OpenScene(MainScenePath, OpenSceneMode.Additive);
+            bool wasDirty = target.isDirty;
+            try
+            {
+                EnsureFolder(MatFolder);
+                EnsureFolder(TexFolder);
+                var flame = FlameTexture();
+                var material = LoadOrMakeMaterial("Engine Flame", "Mobile/Particles/Additive", m => m.SetTexture("_MainTex", flame));
+                material.SetTexture("_MainTex", flame);
+                if (material.HasProperty("_TintColor")) material.SetColor("_TintColor", Color.white);
+                EditorUtility.SetDirty(material);
+
+                var particles = target.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<ParticleSystem>(true)).ToArray();
+                Action<string, float, Color, Color, float, bool> apply = (name, size, hot, mid, strength, attached) =>
+                {
+                    var ps = particles.FirstOrDefault(p => p.name == name);
+                    if (ps == null) throw new Exception("plume object not found in Scene 1: " + name);
+                    ConfigureFlame(ps, size, hot, mid, strength, attached, material);
+                    EditorUtility.SetDirty(ps);
+                    EditorUtility.SetDirty(ps.GetComponent<ParticleSystemRenderer>());
+                };
+                apply("Flame S200 R", 2.0f, new Color(1f, 1f, 0.88f), new Color(1f, 0.48f, 0.055f), 1f, false);
+                apply("Flame S200 L", 2.0f, new Color(1f, 1f, 0.88f), new Color(1f, 0.48f, 0.055f), 1f, false);
+                apply("Flame L110", 2.2f, new Color(1f, 0.94f, 0.76f), new Color(1f, 0.30f, 0.035f), 0.82f, true);
+                apply("Flame C25", 1.7f, new Color(0.88f, 0.96f, 1f), new Color(0.28f, 0.46f, 1f), 0.72f, true);
+
+                EditorSceneManager.MarkSceneDirty(target);
+                AssetDatabase.SaveAssets();
+                if (!wasDirty) EditorSceneManager.SaveScene(target);
+                Debug.Log("[GSLV] Upgraded the four engine plumes in Scene 1" + (wasDirty ? "; scene was already dirty, press Ctrl+S to keep it." : "."));
+            }
+            catch (Exception e)
+            {
+                Debug.LogError("[GSLV] Engine plume upgrade failed: " + e);
+            }
+            finally
+            {
+                if (openedHere && target.IsValid() && target.isLoaded) EditorSceneManager.CloseScene(target, true);
+            }
         }
 
         [MenuItem("GSLV/Timeline/Build Mission Timeline")]
@@ -421,9 +481,59 @@ namespace GslvMission.EditorTools
             return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
         }
 
+        // A long, soft-edged flame tongue. The baked turbulence and shock-cell bands make the exhaust read as
+        // energetic without a costly distortion shader or extra particle layers (important for two-eye VR rendering).
+        static Texture2D FlameTexture()
+        {
+            string path = TexFolder + "/Engine Flame Tongue.png";
+            var existing = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+            if (existing != null) return existing;
+
+            const int W = 128, H = 256;
+            var tex = new Texture2D(W, H, TextureFormat.RGBA32, false);
+            for (int y = 0; y < H; y++)
+                for (int x = 0; x < W; x++)
+                {
+                    float u = (x + 0.5f) / W;
+                    float v = (y + 0.5f) / H;
+                    float across = Mathf.Abs(u * 2f - 1f);
+
+                    // Pinched at the nozzle and feathered at the end, with two scales of baked-in turbulence.
+                    float envelope = Mathf.Sin(Mathf.PI * Mathf.Pow(v, 0.82f));
+                    float width = Mathf.Lerp(0.17f, 0.74f, Mathf.Pow(envelope, 0.62f));
+                    float coarse = Mathf.PerlinNoise(u * 4.5f + 11.3f, v * 8f + 2.7f);
+                    float fine = Mathf.PerlinNoise(u * 13f + 37.1f, v * 22f + 19.4f);
+                    width *= Mathf.Lerp(0.82f, 1.12f, coarse * 0.7f + fine * 0.3f);
+                    float edge = Mathf.Clamp01((width - across) / 0.20f);
+                    edge = edge * edge * (3f - 2f * edge);
+
+                    float endFade = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(v * 9f))
+                        * Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((1f - v) * 4f));
+                    float core = Mathf.Exp(-across * across * 7.5f);
+                    // Bright compression cells hint at the diamond pattern visible in high-speed rocket exhaust.
+                    float cells = Mathf.Pow(Mathf.Max(0f, Mathf.Sin((v * 5.2f + 0.08f) * Mathf.PI)), 7f);
+                    float brightness = Mathf.Clamp01(0.48f + core * 0.42f + cells * core * 0.28f);
+                    float alpha = edge * endFade * Mathf.Lerp(0.68f, 1f, core);
+                    tex.SetPixel(x, y, new Color(brightness, brightness, brightness, alpha));
+                }
+
+            File.WriteAllBytes(path, tex.EncodeToPNG());
+            Object.DestroyImmediate(tex);
+            AssetDatabase.ImportAsset(path);
+            var imp = (TextureImporter)AssetImporter.GetAtPath(path);
+            imp.alphaIsTransparency = true;
+            imp.mipmapEnabled = true;       // avoids shimmer in the headset as the plume recedes
+            imp.wrapMode = TextureWrapMode.Clamp;
+            imp.filterMode = FilterMode.Bilinear;
+            imp.textureCompression = TextureImporterCompression.Compressed;
+            imp.SaveAndReimport();
+            return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+        }
+
         static void PrepareAssets()
         {
             var dot = SoftDot();
+            var flame = FlameTexture();
             var probeTex = AssetDatabase.LoadAssetAtPath<Texture2D>(ProbeTexPath);
             hologramMat = LoadOrMakeMaterial("Satellite Hologram", "Standard", m =>
             {
@@ -444,7 +554,11 @@ namespace GslvMission.EditorTools
                 if (probeTex != null) m.SetTexture("_MainTex", probeTex);
             });
             fadeMat = LoadOrMakeMaterial("Screen Fade", "OverlayUI", m => m.color = Color.black);
-            flameMat = LoadOrMakeMaterial("Engine Flame", "Mobile/Particles/Additive", m => m.SetTexture("_MainTex", dot));
+            flameMat = LoadOrMakeMaterial("Engine Flame", "Mobile/Particles/Additive", m => m.SetTexture("_MainTex", flame));
+            // LoadOrMakeMaterial preserves existing assets, so refresh these properties on rebuild as well.
+            flameMat.SetTexture("_MainTex", flame);
+            if (flameMat.HasProperty("_TintColor")) flameMat.SetColor("_TintColor", Color.white);
+            EditorUtility.SetDirty(flameMat);
             smokeMat = LoadOrMakeMaterial("Exhaust Smoke", "Mobile/Particles/Alpha Blended", m => m.SetTexture("_MainTex", dot));
             var smokeTex = PuffTexture("Smoke Puff", 14, 0.55f, 7);
             var cloudTex = PuffTexture("Cloud Puff", 18, 0.45f, 21);
@@ -883,6 +997,8 @@ namespace GslvMission.EditorTools
             dir.timeUpdateMode = DirectorUpdateMode.GameTime;
             flow = Undo.AddComponent<MissionFlow>(host);
             flow.director = dir;
+            // headset render settings (MSAA, terrain distances, eye near plane), applied before QWR makes its eye buffers
+            NewObject("Headset Render Settings", FindRoot("TIMELINE"), typeof(HeadsetRenderSettings));
         }
 
         // ---------------------------------------------------------------- UI
@@ -1383,8 +1499,9 @@ namespace GslvMission.EditorTools
             var pb = WorldBounds(modelRoot);
             Vector3 padBase = new Vector3(pb.center.x, pb.min.y, pb.center.z);
 
-            // One flame per engine, coloured like the real exhausts: the S200 solids bright yellow-white, the L110's Vikas
-            // engines orange, the C25's hydrogen-oxygen flame a pale blue. The Timeline switches each on and off.
+            // One low-cost stretched-particle plume per engine, coloured like the real exhausts: the S200 solids
+            // bright yellow-white, the L110's Vikas engines orange, and the C25 hydrogen-oxygen plume pale blue.
+            // The texture supplies turbulent edges and shock cells, so realism does not require stacked renderers.
             var flames = NewObject("Engine Flames", padLift);
             var nozzles = new[] { new[] { "Flame S200 R", "Louncher.005" }, new[] { "Flame S200 L", "Louncher.006" }, new[] { "Flame L110", "Louncher.001" }, new[] { "Flame C25", "J_2S_J_2_0" } };
             var nozzleAt = new Dictionary<string, Vector3>();
@@ -1397,9 +1514,9 @@ namespace GslvMission.EditorTools
                 nozzleAt[nz[0]] = at;
                 // the L110 and C25 burn in space, where the rocket is fast: their flames move with the nozzle (local space),
                 // so they stay a flame on the engine instead of a long streak left behind
-                if (nz[0] == "Flame L110") Reg(nz[0], MakeFlame(nz[0], flames.transform, at, 2.2f, new Color(1f, 0.85f, 0.6f), new Color(1f, 0.38f, 0.08f), 0.8f, true));
-                else if (nz[0] == "Flame C25") Reg(nz[0], MakeFlame(nz[0], flames.transform, at, 1.6f, new Color(0.85f, 0.92f, 1f), new Color(0.45f, 0.55f, 1f), 0.7f, true));
-                else Reg(nz[0], MakeFlame(nz[0], flames.transform, at, 1.9f, new Color(1f, 1f, 0.9f), new Color(1f, 0.62f, 0.18f), 1f));
+                if (nz[0] == "Flame L110") Reg(nz[0], MakeFlame(nz[0], flames.transform, at, 2.2f, new Color(1f, 0.94f, 0.76f), new Color(1f, 0.30f, 0.035f), 0.82f, true));
+                else if (nz[0] == "Flame C25") Reg(nz[0], MakeFlame(nz[0], flames.transform, at, 1.7f, new Color(0.88f, 0.96f, 1f), new Color(0.28f, 0.46f, 1f), 0.72f, true));
+                else Reg(nz[0], MakeFlame(nz[0], flames.transform, at, 2.0f, new Color(1f, 1f, 0.88f), new Color(1f, 0.48f, 0.055f), 1f));
             }
 
             // Thick white smoke trails from the solid boosters while in the lower atmosphere (world space, so they stay behind).
@@ -1441,6 +1558,7 @@ namespace GslvMission.EditorTools
                 lamp.range = 70f;
                 lamp.intensity = 2.2f;
                 lamp.shadows = LightShadows.None;
+                lamp.renderMode = LightRenderMode.ForceVertex;   // per-pixel it would draw everything near the pad a second time
                 glow.GetComponent<LightFlicker>().baseIntensity = 2.2f;
                 Reg("Engine Light", glow);
             }
@@ -1570,37 +1688,54 @@ namespace GslvMission.EditorTools
         }
 
         // attached: particles move with the engine (local space) instead of staying where they were emitted.
+        // The maximum and emission rate are deliberately below the old effect: about 20-28 particles are alive per
+        // engine, but stretched textured tongues fill the plume more convincingly than many overlapping soft dots.
         static GameObject MakeFlame(string name, Transform parent, Vector3 worldPos, float size, Color hot, Color mid, float strength, bool attached = false)
         {
             var go = NewObject(name, parent, typeof(ParticleSystem));
             go.transform.position = worldPos;
             go.transform.rotation = Quaternion.Euler(90f, 0f, 0f); // emit straight down
             var ps = go.GetComponent<ParticleSystem>();
+            ConfigureFlame(ps, size, hot, mid, strength, attached, flameMat);
+            return go;
+        }
+
+        static void ConfigureFlame(ParticleSystem ps, float size, Color hot, Color mid, float strength, bool attached, Material material)
+        {
             var main = ps.main;
             main.loop = true;
-            main.startLifetime = 0.6f;
-            main.startSpeed = 14f;
-            main.startSize = new ParticleSystem.MinMaxCurve(size * 0.7f, size);
+            main.startLifetime = new ParticleSystem.MinMaxCurve(0.38f, 0.56f);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(17f, 24f);
+            main.startSize = new ParticleSystem.MinMaxCurve(size * 0.48f, size * 0.72f);
             main.startColor = new Color(hot.r, hot.g, hot.b, strength);
             main.simulationSpace = attached ? ParticleSystemSimulationSpace.Local : ParticleSystemSimulationSpace.World;
-            main.maxParticles = 160;
+            main.maxParticles = 64;
             var em = ps.emission;
-            em.rateOverTime = 70f;
+            em.rateOverTime = 48f;
             var sh = ps.shape;
             sh.shapeType = ParticleSystemShapeType.Cone;
-            sh.angle = 4f;
-            sh.radius = size * 0.2f;
+            sh.angle = 3.2f;
+            sh.radius = size * 0.13f;
+            sh.radiusThickness = 0.75f;
             var col = ps.colorOverLifetime;
             col.enabled = true;
             var grad = new Gradient();
-            grad.SetKeys(new[] { new GradientColorKey(hot, 0f), new GradientColorKey(mid, 0.45f), new GradientColorKey(mid * 0.6f, 1f) },
-                new[] { new GradientAlphaKey(strength, 0f), new GradientAlphaKey(0.8f * strength, 0.5f), new GradientAlphaKey(0f, 1f) });
+            grad.SetKeys(new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(hot, 0.12f), new GradientColorKey(mid, 0.52f), new GradientColorKey(mid * 0.42f, 1f) },
+                new[] { new GradientAlphaKey(strength, 0f), new GradientAlphaKey(strength, 0.28f), new GradientAlphaKey(0.72f * strength, 0.68f), new GradientAlphaKey(0f, 1f) });
             col.color = grad;
             var sz = ps.sizeOverLifetime;
             sz.enabled = true;
-            sz.size = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(new Keyframe(0f, 1f), new Keyframe(1f, 0.25f)));
-            go.GetComponent<ParticleSystemRenderer>().sharedMaterial = flameMat;
-            return go;
+            sz.size = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(new Keyframe(0f, 0.48f), new Keyframe(0.14f, 1f), new Keyframe(0.62f, 0.76f), new Keyframe(1f, 0.12f)));
+
+            var renderer = ps.GetComponent<ParticleSystemRenderer>();
+            renderer.sharedMaterial = material;
+            renderer.renderMode = ParticleSystemRenderMode.Stretch;
+            renderer.lengthScale = 3.2f;
+            renderer.velocityScale = 0.16f;
+            renderer.cameraVelocityScale = 0f;
+            renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            renderer.receiveShadows = false;
+            renderer.sortMode = ParticleSystemSortMode.OldestInFront;
         }
 
         // =====================================================================================
