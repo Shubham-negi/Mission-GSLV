@@ -1,0 +1,124 @@
+fileFormatVersion: 2
+guid: e7e8313eff51c644e9403d9b72ecedf9
+ModelImporter:
+  serializedVersion: 19
+  fileIDToRecycleName:
+    100000: //RootNode
+    100002: trigger
+    100004: "\u4E0A\u6309\u952E"
+    100006: "\u4E0B\u6309\u952E"
+    100008: "\u4E3B\u4F53"
+    100010: "\u7535\u6C60"
+    100012: battery
+    100014: key_back
+    100016: key_home
+    100018: key_trigger
+    100020: main
+    400000: //RootNode
+    400002: trigger
+    400004: "\u4E0A\u6309\u952E"
+    400006: "\u4E0B\u6309\u952E"
+    400008: "\u4E3B\u4F53"
+    400010: "\u7535\u6C60"
+    400012: battery
+    400014: key_back
+    400016: key_home
+    400018: key_trigger
+    400020: main
+    2100000: 03 - Default
+    2100002: 02 - Default
+    2100004: 06 - Default
+    2300000: trigger
+    2300002: "\u4E0A\u6309\u952E"
+    2300004: "\u4E0B\u6309\u952E"
+    2300006: "\u4E3B\u4F53"
+    2300008: "\u7535\u6C60"
+    2300010: battery
+    2300012: key_back
+    2300014: key_home
+    2300016: key_trigger
+    2300018: main
+    3300000: trigger
+    3300002: "\u4E0A\u6309\u952E"
+    3300004: "\u4E0B\u6309\u952E"
+    3300006: "\u4E3B\u4F53"
+    3300008: "\u7535\u6C60"
+    3300010: battery
+    3300012: key_back
+    3300014: key_home
+    3300016: key_trigger
+    3300018: main
+    4300000: "\u4E3B\u4F53"
+    4300002: "\u4E0B\u6309\u952E"
+    4300004: "\u7535\u6C60"
+    4300006: trigger
+    4300008: "\u4E0A\u6309\u952E"
+    4300010: key_home
+    4300012: battery
+    4300014: key_trigger
+    4300016: key_back
+    4300018: main
+  materials:
+    importMaterials: 1
+    materialName: 0
+    materialSearch: 1
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleRotations: 1
+    optimizeGameObjects: 0
+    motionNodeName: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    animationCompression: 1
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    clipAnimations: []
+    isReadable: 1
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    importBlendShapes: 1
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    optimizeMeshForGPU: 1
+    keepQuads: 0
+    weldVertices: 1
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+  importAnimation: 1
+  copyAvatar: 0
+  humanDescription:
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    rootMotionBoneName: 
+    hasTranslationDoF: 0
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  animationType: 0
+  humanoidOversampling: 1
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

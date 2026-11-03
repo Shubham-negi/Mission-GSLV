@@ -1,0 +1,683 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root><!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+	<data name="ActivityFinish" xml:space="preserve">
+		<value>તમે પ્રવૃત્તિ પૂર્ણ કરી લીધી છે.</value>
+	</data>
+	<data name="Assessment" xml:space="preserve">
+		<value>આકારણી</value>
+	</data>
+	<data name="Bar graph" xml:space="preserve">
+		<value>બાર ગ્રાફ</value>
+	</data>
+	<data name="BoxC1_1" xml:space="preserve">
+		<value>નામ</value>
+	</data>
+	<data name="BoxC1_1 (1)" xml:space="preserve">
+		<value>એક 10 વૃક્ષોનું પ્રતિનિધિત્વ કરે છે</value>
+	</data>
+	<data name="BoxC1_1B" xml:space="preserve">
+		<value>વર્ગના ગુણ</value>
+	</data>
+	<data name="BoxC1_1G" xml:space="preserve">
+		<value>વર્ગના ગુણ</value>
+	</data>
+	<data name="BoxC1_1G2" xml:space="preserve">
+		<value>વર્ગના ગુણ</value>
+	</data>
+	<data name="BoxC1_1O" xml:space="preserve">
+		<value>મનપસંદ રંગ</value>
+	</data>
+	<data name="BoxC1_1O2" xml:space="preserve">
+		<value>મનપસંદ રંગ</value>
+	</data>
+	<data name="BoxC1_2" xml:space="preserve">
+		<value>સફરજન</value>
+	</data>
+	<data name="BoxC1_2G" xml:space="preserve">
+		<value>નવું મૂલ્ય</value>
+	</data>
+	<data name="BoxC1_2O" xml:space="preserve">
+		<value>જાંબલી</value>
+	</data>
+	<data name="BoxC1_2O2" xml:space="preserve">
+		<value>જાંબલી</value>
+	</data>
+	<data name="BoxC1_3" xml:space="preserve">
+		<value>પીચ</value>
+	</data>
+	<data name="BoxC1_3O" xml:space="preserve">
+		<value>પીળો</value>
+	</data>
+	<data name="BoxC1_3O2" xml:space="preserve">
+		<value>પીળો</value>
+	</data>
+	<data name="BoxC1_4" xml:space="preserve">
+		<value>જામફળ</value>
+	</data>
+	<data name="BoxC1_4O" xml:space="preserve">
+		<value>લાલ</value>
+	</data>
+	<data name="BoxC1_4O2" xml:space="preserve">
+		<value>લાલ</value>
+	</data>
+	<data name="BoxC1_5" xml:space="preserve">
+		<value>નાસપતી</value>
+	</data>
+	<data name="BoxC1_5 (1)O" xml:space="preserve">
+		<value>વાદળી</value>
+	</data>
+	<data name="BoxC1_5 (1)O2" xml:space="preserve">
+		<value>વાદળી</value>
+	</data>
+	<data name="BoxC1_5 (2)O" xml:space="preserve">
+		<value>નારંગી</value>
+	</data>
+	<data name="BoxC1_5 (2)O2" xml:space="preserve">
+		<value>નારંગી</value>
+	</data>
+	<data name="BoxC1_5O" xml:space="preserve">
+		<value>લીલો</value>
+	</data>
+	<data name="BoxC1_5O2" xml:space="preserve">
+		<value>લીલો</value>
+	</data>
+	<data name="BoxC2_1" xml:space="preserve">
+		<value>વૃક્ષોની સંખ્યા</value>
+	</data>
+	<data name="BoxC2_1 (1)O" xml:space="preserve">
+		<value>વિદ્યાર્થીઓની સંખ્યા (આવર્તન)</value>
+	</data>
+	<data name="BoxC2_1 (1)O2" xml:space="preserve">
+		<value>વિદ્યાર્થીઓની સંખ્યા (આવર્તન)</value>
+	</data>
+	<data name="BoxC2_1G" xml:space="preserve">
+		<value>આવર્તન</value>
+	</data>
+	<data name="BoxC2_1G2" xml:space="preserve">
+		<value>આવર્તન</value>
+	</data>
+	<data name="BoxC2_1O" xml:space="preserve">
+		<value>ટેલી માર્ક્સ</value>
+	</data>
+	<data name="BoxC2_1O2" xml:space="preserve">
+		<value>ટેલી માર્ક્સ</value>
+	</data>
+	<data name="Btn_Exit" xml:space="preserve">
+		<value>બહાર નીકળો</value>
+	</data>
+	<data name="Btn_Graphs" xml:space="preserve">
+		<value>આલેખ</value>
+	</data>
+	<data name="Btn_Grouping data" xml:space="preserve">
+		<value>ડેટાનું જૂથીકરણ</value>
+	</data>
+	<data name="Btn_Histogram" xml:space="preserve">
+		<value>હિસ્ટોગ્રામ</value>
+	</data>
+	<data name="Btn_Introduction" xml:space="preserve">
+		<value>પરિચય</value>
+	</data>
+	<data name="Btn_Organising data" xml:space="preserve">
+		<value>ડેટા ગોઠવવો</value>
+	</data>
+	<data name="Btn_PlayAgain" xml:space="preserve">
+		<value>ફરી રમો</value>
+	</data>
+	<data name="C_L_1 (2)" xml:space="preserve">
+		<value>હેમ્સ્ટર</value>
+	</data>
+	<data name="C_L_1 (2)0" xml:space="preserve">
+		<value>ઋષિ</value>
+	</data>
+	<data name="C_L_1 (3)" xml:space="preserve">
+		<value>બિલાડી</value>
+	</data>
+	<data name="C_L_1 (3)0" xml:space="preserve">
+		<value>નિભા</value>
+	</data>
+	<data name="C_L_1 (4)" xml:space="preserve">
+		<value>કૂતરો</value>
+	</data>
+	<data name="C_L_1 (4)0" xml:space="preserve">
+		<value>નેહા</value>
+	</data>
+	<data name="C_L_1 (5)" xml:space="preserve">
+		<value>પક્ષી</value>
+	</data>
+	<data name="C_L_1 (5)0" xml:space="preserve">
+		<value>આદિત્ય</value>
+	</data>
+	<data name="C_L_1 (6)" xml:space="preserve">
+		<value>માછલી</value>
+	</data>
+	<data name="C_L_1 (6)0" xml:space="preserve">
+		<value>બીના</value>
+	</data>
+	<data name="C_L_1 (7)" xml:space="preserve">
+		<value>સસલું</value>
+	</data>
+	<data name="Double Bar Graph" xml:space="preserve">
+		<value>ડબલ બાર ગ્રાફ</value>
+	</data>
+	<data name="Exit" xml:space="preserve">
+		<value>બહાર નીકળો</value>
+	</data>
+	<data name="Gameplay" xml:space="preserve">
+		<value>ગેમપ્લે</value>
+	</data>
+	<data name="GridLineG" xml:space="preserve">
+		<value>X – અક્ષ: 1 યુનિટ = 1 પેટ
+
+Y – અક્ષ: 1 યુનિટ = 1 વિદ્યાર્થી</value>
+	</data>
+	<data name="GridLineGH" xml:space="preserve">
+		<value>X – અક્ષ: 1 એકમ = 10 ગુણ</value>
+	</data>
+	<data name="GridLineGHisto" xml:space="preserve">
+		<value>X – અક્ષ: 1 એકમ = 10 ગુણ
+
+Y – અક્ષ: 1 એકમ = 2.5 વિદ્યાર્થી</value>
+	</data>
+	<data name="Grouping data" xml:space="preserve">
+		<value>ડેટાનું જૂથીકરણ</value>
+	</data>
+	<data name="Height in cmH" xml:space="preserve">
+		<value>સે.મી.માં ઊંચાઈ</value>
+	</data>
+	<data name="Height in cmH0" xml:space="preserve">
+		<value>સે.મી.માં ઊંચાઈ</value>
+	</data>
+	<data name="Height of students" xml:space="preserve">
+		<value>વિદ્યાર્થીઓની ઊંચાઈ</value>
+	</data>
+	<data name="HeightstudentsH" xml:space="preserve">
+		<value>વિદ્યાર્થીઓની ઊંચાઈ</value>
+	</data>
+	<data name="Histogram" xml:space="preserve">
+		<value>હિસ્ટોગ્રામ</value>
+	</data>
+	<data name="Inst_1" xml:space="preserve">
+		<value>ડેટાને આંકડાકીય આંકડાઓ અથવા આપેલા તથ્યોના સમૂહના રૂપમાં માહિતીના સંગ્રહ તરીકે સમજી શકાય છે.</value>
+	</data>
+	<data name="Inst_1 (1)" xml:space="preserve">
+		<value>વર્ગ અંતરાલ :</value>
+	</data>
+	<data name="Inst_1 (2)" xml:space="preserve">
+		<value>નીચલા-વર્ગની મર્યાદા:</value>
+	</data>
+	<data name="Inst_1 (3)" xml:space="preserve">
+		<value>ઉચ્ચ-વર્ગ મર્યાદા:</value>
+	</data>
+	<data name="Inst_1 (5)" xml:space="preserve">
+		<value>પહોળાઈ:</value>
+	</data>
+	<data name="Inst_10" xml:space="preserve">
+		<value>પ્રશ્ન: પાલતુ પ્રાણીઓના સર્વેક્ષણ અંગે નીચેનામાંથી કયું વિધાન સાચું છે?</value>
+	</data>
+	<data name="Inst_11" xml:space="preserve">
+		<value>બે ડેટાની એકસાથે સરખામણી કરવા માટે ડબલ બાર ગ્રાફનો ઉપયોગ થાય છે.</value>
+	</data>
+	<data name="Inst_12" xml:space="preserve">
+		<value>બે સરખામણી કરતા ડેટાની પહોળાઈ પણ સમાન છે.</value>
+	</data>
+	<data name="Inst_13" xml:space="preserve">
+		<value>બે તુલનાત્મક ડેટા એકબીજા સાથે ચોંટી ગયા છે અને આ સમાન પેટર્ન સમાન અંતરે જોવા મળે છે.</value>
+	</data>
+	<data name="Inst_14" xml:space="preserve">
+		<value>પ્રશ્ન: પરીક્ષા 1 થી પરીક્ષા 2 સુધી નીચેનામાંથી કયા વિદ્યાર્થીના પ્રદર્શનમાં સૌથી વધુ સુધારો થયો?</value>
+	</data>
+	<data name="Inst_15" xml:space="preserve">
+		<value>પ્રશ્ન: નીચેનામાંથી કયા વિદ્યાર્થીનું પ્રદર્શન પરીક્ષા 1 થી પરીક્ષા 2 સુધી સૌથી વધુ ઘટે છે?</value>
+	</data>
+	<data name="Inst_16" xml:space="preserve">
+		<value>કાચો ડેટા એકત્રિત કરવામાં આવે છે અને રેન્ડમલી રજૂ કરવામાં આવે છે.</value>
+	</data>
+	<data name="Inst_17" xml:space="preserve">
+		<value>જ્યારે આપણે કાચા ડેટાને વધુ અર્થપૂર્ણ બનાવવા માટે વ્યવસ્થિત રીતે ગોઠવીએ છીએ. તેને ડેટાનું પ્રસ્તુતિ કહેવામાં આવે છે.</value>
+	</data>
+	<data name="Inst_18" xml:space="preserve">
+		<value>ઉદાહરણ તરીકે, 
+૨૮ વિદ્યાર્થીઓના વર્ગમાં મનપસંદ રંગો નીચે મુજબ હતા 
+જાંબલી ૪, પીળો ૭, લાલ ૭, લીલો ૬, વાદળી ૫, નારંગી ૪.</value>
+	</data>
+	<data name="Inst_19" xml:space="preserve">
+		<value>મૂલ્યોને યોગ્ય હાઇલાઇટ કરેલી જગ્યાએ ખેંચો અને છોડો.</value>
+	</data>
+	<data name="Inst_2" xml:space="preserve">
+		<value>ડેટા હેન્ડલિંગમાં કાચા ડેટાનું વ્યવસ્થિત રીતે પ્રતિનિધિત્વ શામેલ છે જેથી તેનો ઉપયોગ કેટલાક પરિણામ શોધવા માટે થઈ શકે.</value>
+	</data>
+	<data name="Inst_20" xml:space="preserve">
+		<value>દરેક મનપસંદ રંગ સામે અંતિમ મૂલ્ય આવર્તન દર્શાવે છે.</value>
+	</data>
+	<data name="Inst_21" xml:space="preserve">
+		<value>આ સમગ્ર કોષ્ટકને ફ્રીક્વન્સી ડિસ્ટ્રિબ્યુશન ટેબલ તરીકે ઓળખવામાં આવે છે.</value>
+	</data>
+	<data name="Inst_22" xml:space="preserve">
+		<value>અવલોકન કરવા માટે મોટી સંખ્યામાં જથ્થાઓને એકસાથે જૂથબદ્ધ કરવાની જરૂર છે.</value>
+	</data>
+	<data name="Inst_23" xml:space="preserve">
+		<value>આ સમગ્ર કોષ્ટકને જૂથબદ્ધ આવર્તન વિતરણ કોષ્ટક તરીકે ઓળખવામાં આવે છે.</value>
+	</data>
+	<data name="Inst_24" xml:space="preserve">
+		<value>ઉદાહરણ તરીકે, 40 વિદ્યાર્થીઓના વર્ગમાં મેળવેલા ગુણ
+10, 9, 8, 7, 6, 5, 11, 12, 13, 13, 14,14, 15,15 16, 16, 17, 17, 18, 19,20,20
+, 21, 22, 22, 23, 24,24, 25, 25, 26, 27, 28, 28, 29, 30, 30,30
+, 31,32,33,34,35,35,35,36,37,38, 38,39,40,40
+, 41,41,42,44, 45,46, 47,48</value>
+	</data>
+	<data name="Inst_25" xml:space="preserve">
+		<value>જ્યારે આપણે બધા અવલોકનોને તેમના કદ અનુસાર અનેક જૂથોમાં વર્ગીકૃત કરીએ છીએ.</value>
+	</data>
+	<data name="Inst_26" xml:space="preserve">
+		<value>દરેક વર્ગ અંતરાલમાં સૌથી ઓછી સંખ્યા.</value>
+	</data>
+	<data name="Inst_27" xml:space="preserve">
+		<value>દરેક વર્ગ અંતરાલમાં સૌથી વધુ સંખ્યા.</value>
+	</data>
+	<data name="Inst_28" xml:space="preserve">
+		<value>સૌથી વધુ સંખ્યાથી સૌથી ઓછી સંખ્યા વચ્ચેના મૂલ્યમાં તફાવત.</value>
+	</data>
+	<data name="Inst_29" xml:space="preserve">
+		<value>તેના વિશે વધુ જાણવા માટે હાઇલાઇટ કરેલા બટન પર ક્લિક કરો.</value>
+	</data>
+	<data name="Inst_3" xml:space="preserve">
+		<value>તમે પિક્ટોગ્રાફ, બાર ગ્રાફ અને ડબલ બાર ગ્રાફ વિશે પહેલેથી જ શીખી ગયા છો. 
+પણ ફરીથી, અમે તમારા જ્ઞાનને વધારવા માટે તેમાંથી પસાર થઈ રહ્યા છીએ.</value>
+	</data>
+	<data name="Inst_4" xml:space="preserve">
+		<value>તે સરળ પ્રતીકોનો ઉપયોગ કરીને આપેલા ડેટાનું ચિત્ર પ્રતિનિધિત્વ છે.
+ચિત્રની સંખ્યા ડેટાના જથ્થાને દર્શાવે છે.</value>
+	</data>
+	<data name="Inst_5" xml:space="preserve">
+		<value>ઉદાહરણ તરીકે, નીચેની સમસ્યાનો વિચાર કરો:</value>
+	</data>
+	<data name="Inst_6" xml:space="preserve">
+		<value>જ્યારે ચિત્રલેખ દ્વારા ડેટા રજૂ કરવો મુશ્કેલ બની જાય છે ત્યારે બાર ગ્રાફનો ઉપયોગ ઘણીવાર થાય છે.</value>
+	</data>
+	<data name="Inst_7" xml:space="preserve">
+		<value>બારની ઊંચાઈ દરેક આપેલ શ્રેણી માટે જથ્થો આપે છે.</value>
+	</data>
+	<data name="Inst_8" xml:space="preserve">
+		<value>બાર એકબીજાથી સમાન અંતરે દર્શાવવામાં આવ્યા છે અને તેમની પહોળાઈ સમાન છે.</value>
+	</data>
+	<data name="Inst_9" xml:space="preserve">
+		<value>પ્રશ્ન: કયું પાલતુ પ્રાણી સૌથી ઓછું પ્રિય છે?</value>
+	</data>
+	<data name="Inst_Remark" xml:space="preserve">
+		<value>બે વર્ગના અંતરાલમાં થોડા ગુણ આવે છે પરંતુ આપણે તેમને ફક્ત એક જ ગુણમાં ગણીએ છીએ. સામાન્ય અવલોકનને ઉચ્ચ વર્ગમાં ગણવું સામાન્ય છે. તેથી, 10 વર્ગ 0-10 હેઠળ નહીં પરંતુ વર્ગ 10-20 હેઠળ આવશે.</value>
+	</data>
+	<data name="MarksH" xml:space="preserve">
+		<value>ગુણ</value>
+	</data>
+	<data name="MCQQuizInst" xml:space="preserve">
+		<value>► નીચેની ક્વિઝમાં બહુવિધ પસંદગીના પ્રશ્નો આપવામાં આવ્યા છે.
+► આપેલા બધા જવાબો વાંચો અને સાચા જવાબ પર ક્લિક કરો.
+► તમે એક જ પ્રશ્નનો બે વાર પ્રયાસ કરી શકો છો.
+► પ્રથમ પ્રયાસમાં દરેક સાચા જવાબ માટે તમને 2 પોઈન્ટ મળે છે.
+► બીજા પ્રયાસમાં દરેક સાચા જવાબ માટે તમને 1 પોઈન્ટ મળે છે.</value>
+	</data>
+	<data name="MCQQuizTitle" xml:space="preserve">
+		<value>MCQ ક્વિઝ સૂચનાઓ</value>
+	</data>
+	<data name="No" xml:space="preserve">
+		<value>ના</value>
+	</data>
+	<data name="Option_1" xml:space="preserve">
+		<value>a) પક્ષી</value>
+	</data>
+	<data name="Option_2" xml:space="preserve">
+		<value>b) માછલી</value>
+	</data>
+	<data name="Option_3" xml:space="preserve">
+		<value>c) હેમ્સ્ટર</value>
+	</data>
+	<data name="Option_4" xml:space="preserve">
+		<value>ડી) બિલાડી</value>
+	</data>
+	<data name="Option10_1" xml:space="preserve">
+		<value>a) બિલાડી હેમ્સ્ટર કરતાં બમણી પસંદ કરવામાં આવે છે.</value>
+	</data>
+	<data name="Option10_2" xml:space="preserve">
+		<value>b) માછલી કરતાં કૂતરાને બમણું પ્રિય છે.</value>
+	</data>
+	<data name="Option10_3" xml:space="preserve">
+		<value>c) પક્ષી અને કૂતરાને સમાન રીતે પસંદ કરવામાં આવે છે.</value>
+	</data>
+	<data name="Option10_4" xml:space="preserve">
+		<value>d) પક્ષીની સરખામણીમાં સસલું ત્રણ વાર પસંદ કરવામાં આવે છે.</value>
+	</data>
+	<data name="Option14_1" xml:space="preserve">
+		<value>a) આદિત્ય</value>
+	</data>
+	<data name="Option14_2" xml:space="preserve">
+		<value>b) નેહા</value>
+	</data>
+	<data name="Option14_3" xml:space="preserve">
+		<value>c) બીના</value>
+	</data>
+	<data name="Option14_4" xml:space="preserve">
+		<value>ડી) નિભા</value>
+	</data>
+	<data name="Option15_1" xml:space="preserve">
+		<value>a) આદિત્ય</value>
+	</data>
+	<data name="Option15_2" xml:space="preserve">
+		<value>b) નેહા</value>
+	</data>
+	<data name="Option15_3" xml:space="preserve">
+		<value>c) બીના</value>
+	</data>
+	<data name="Option15_4" xml:space="preserve">
+		<value>ડી) નિભા</value>
+	</data>
+	<data name="Option2_1" xml:space="preserve">
+		<value>a) સફરજન કરતા નાસપતીના ઝાડની સંખ્યા વધારે છે.</value>
+	</data>
+	<data name="Option2_2" xml:space="preserve">
+		<value>b) સફરજનના ઝાડની સંખ્યા પીચ કરતા ઓછી છે.</value>
+	</data>
+	<data name="Option2_3" xml:space="preserve">
+		<value>c) જામફળ કરતાં પીચના ઝાડની સંખ્યા વધુ છે.</value>
+	</data>
+	<data name="Option2_4" xml:space="preserve">
+		<value>d) સફરજન કરતા પીચના ઝાડની સંખ્યા ઓછી છે.</value>
+	</data>
+	<data name="OptionQ1_1" xml:space="preserve">
+		<value>a) ડેટા</value>
+	</data>
+	<data name="OptionQ1_2" xml:space="preserve">
+		<value>b) ટેલી</value>
+	</data>
+	<data name="OptionQ1_3" xml:space="preserve">
+		<value>c) આવર્તન</value>
+	</data>
+	<data name="OptionQ1_4" xml:space="preserve">
+		<value>ડી) જૂથ</value>
+	</data>
+	<data name="OptionQ2_1" xml:space="preserve">
+		<value>a) જૂથબદ્ધ ડેટા</value>
+	</data>
+	<data name="OptionQ2_2" xml:space="preserve">
+		<value>b) પહોળાઈ</value>
+	</data>
+	<data name="OptionQ2_3" xml:space="preserve">
+		<value>c) હિસ્ટોગ્રામ</value>
+	</data>
+	<data name="OptionQ2_4" xml:space="preserve">
+		<value>ડી) આવર્તન</value>
+	</data>
+	<data name="OptionQ4_1" xml:space="preserve">
+		<value>a) માહિતીનો સંગ્રહ</value>
+	</data>
+	<data name="OptionQ4_2" xml:space="preserve">
+		<value>b) વર્ગ અંતરાલ</value>
+	</data>
+	<data name="OptionQ4_3" xml:space="preserve">
+		<value>c) હિસ્ટોગ્રામ</value>
+	</data>
+	<data name="OptionQ4_4" xml:space="preserve">
+		<value>ડી) આવર્તન</value>
+	</data>
+	<data name="Organising data" xml:space="preserve">
+		<value>ડેટા ગોઠવવો</value>
+	</data>
+	<data name="Pictograph" xml:space="preserve">
+		<value>ચિત્રલેખ</value>
+	</data>
+	<data name="PlayAgain" xml:space="preserve">
+		<value>ફરી રમો</value>
+	</data>
+	<data name="Q_1" xml:space="preserve">
+		<value>પ્ર) કેટલા પીચ વૃક્ષો છે?</value>
+	</data>
+	<data name="Q_2" xml:space="preserve">
+		<value>Q) નીચેનામાંથી કયું વિધાન સાચું છે?</value>
+	</data>
+	<data name="Q_3" xml:space="preserve">
+		<value>Q3) જો 30-40 એ જૂથબદ્ધ ડેટાનો વર્ગ અંતરાલ હોય, તો નીચલી વર્ગ મર્યાદા છે:</value>
+	</data>
+	<data name="Q_4" xml:space="preserve">
+		<value>પ્રશ્ન 4) જૂથબદ્ધ ડેટા માટે, દરેક વ્યક્તિગત જૂથને કહેવામાં આવે છે:</value>
+	</data>
+	<data name="Q_40" xml:space="preserve">
+		<value>પ્રશ્ન 4) જૂથબદ્ધ ડેટા માટે, દરેક વ્યક્તિગત જૂથને કહેવામાં આવે છે:</value>
+	</data>
+	<data name="Q_5" xml:space="preserve">
+		<value>પ્રશ્ન ૫) હિસ્ટોગ્રામનું અવલોકન કરો અને નીચે આપેલા પ્રશ્નનો જવાબ આપો:
+
+વિદ્યાર્થીઓની કુલ સંખ્યા</value>
+	</data>
+	<data name="Q_one" xml:space="preserve">
+		<value>પ્રશ્ન: કોઈ ચોક્કસ સંખ્યા કેટલી વાર આવે છે તેને શું કહેવાય છે?</value>
+	</data>
+	<data name="Q_two" xml:space="preserve">
+		<value>Q2) વર્ગ અંતરાલની ઉચ્ચ-વર્ગ મર્યાદા અને નીચલા વર્ગ મર્યાદા વચ્ચેના તફાવતને શું કહેવામાં આવે છે?</value>
+	</data>
+	<data name="QuitMessage" xml:space="preserve">
+		<value>શું તમે ખરેખર છોડવા માંગો છો?</value>
+	</data>
+	<data name="Quiz1" xml:space="preserve">
+		<value>નીચેનામાંથી કયું કેન્દ્રીય વલણનું માપ નથી?</value>
+	</data>
+	<data name="Quiz1_1" xml:space="preserve">
+		<value>સરેરાશ</value>
+	</data>
+	<data name="Quiz1_2" xml:space="preserve">
+		<value>મધ્યક</value>
+	</data>
+	<data name="Quiz1_3" xml:space="preserve">
+		<value>મોડ</value>
+	</data>
+	<data name="Quiz1_4" xml:space="preserve">
+		<value>શ્રેણી</value>
+	</data>
+	<data name="Quiz2" xml:space="preserve">
+		<value>ડેટા સેટનો મોડ છે:</value>
+	</data>
+	<data name="Quiz2_1" xml:space="preserve">
+		<value>સૌથી વધુ વારંવાર બનતું મૂલ્ય</value>
+	</data>
+	<data name="Quiz2_2" xml:space="preserve">
+		<value>જ્યારે ડેટા ચડતા ક્રમમાં ગોઠવાયેલ હોય ત્યારે મધ્યમ મૂલ્ય</value>
+	</data>
+	<data name="Quiz2_3" xml:space="preserve">
+		<value>બધા મૂલ્યોની સરેરાશ</value>
+	</data>
+	<data name="Quiz2_4" xml:space="preserve">
+		<value>ઉચ્ચતમ અને ન્યૂનતમ મૂલ્યો વચ્ચેનો તફાવત</value>
+	</data>
+	<data name="Quiz3" xml:space="preserve">
+		<value>ડેટા સેટની શ્રેણીની ગણતરી આના દ્વારા કરવામાં આવે છે:</value>
+	</data>
+	<data name="Quiz3_1" xml:space="preserve">
+		<value>સરેરાશ અને મધ્યક વચ્ચેનો તફાવત શોધવો</value>
+	</data>
+	<data name="Quiz3_2" xml:space="preserve">
+		<value>બધા મૂલ્યો ઉમેરીને અને મૂલ્યોની સંખ્યા દ્વારા ભાગાકાર કરીને</value>
+	</data>
+	<data name="Quiz3_3" xml:space="preserve">
+		<value>ઉચ્ચતમ અને સૌથી નીચા મૂલ્યો વચ્ચેનો તફાવત શોધવો</value>
+	</data>
+	<data name="Quiz3_4" xml:space="preserve">
+		<value>ડેટા સેટમાં મૂલ્યોની સંખ્યા ગણવી</value>
+	</data>
+	<data name="Quiz4" xml:space="preserve">
+		<value>ડેટા સેટ {4, 7, 9, 11, 13} નો સરેરાશ છે:</value>
+	</data>
+	<data name="Quiz4_1" xml:space="preserve">
+		<value>૭</value>
+	</data>
+	<data name="Quiz4_2" xml:space="preserve">
+		<value>૮.૫</value>
+	</data>
+	<data name="Quiz4_3" xml:space="preserve">
+		<value>9</value>
+	</data>
+	<data name="Quiz4_4" xml:space="preserve">
+		<value>૧૦</value>
+	</data>
+	<data name="Quiz5" xml:space="preserve">
+		<value>ડેટા સેટ {૧૨, ૧૪, ૧૬, ૧૮, ૨૦} નો મધ્યક છે:</value>
+	</data>
+	<data name="Quiz5_1" xml:space="preserve">
+		<value>૧૪</value>
+	</data>
+	<data name="Quiz5_2" xml:space="preserve">
+		<value>૧૬</value>
+	</data>
+	<data name="Quiz5_3" xml:space="preserve">
+		<value>૧૮</value>
+	</data>
+	<data name="Quiz5_4" xml:space="preserve">
+		<value>૨૦</value>
+	</data>
+	<data name="Remark btn" xml:space="preserve">
+		<value>ટિપ્પણી</value>
+	</data>
+	<data name="Start" xml:space="preserve">
+		<value>શરૂઆત</value>
+	</data>
+	<data name="TeacherClosedMessage" xml:space="preserve">
+		<value>શિક્ષકે અરજી બંધ કરી.
+બંધ કરી રહ્યા છીએ....</value>
+	</data>
+	<data name="TeacherMessage" xml:space="preserve">
+		<value>શિક્ષક દ્વારા થોભાવવામાં આવ્યું.
+કૃપા કરીને રાહ જુઓ.</value>
+	</data>
+	<data name="Text_Expenses" xml:space="preserve">
+		<value>વિદ્યાર્થીઓની સંખ્યા</value>
+	</data>
+	<data name="Text_Height" xml:space="preserve">
+		<value>સે.મી.માં ઊંચાઈ</value>
+	</data>
+	<data name="Text_HeightStudent" xml:space="preserve">
+		<value>વિદ્યાર્થીઓની ઊંચાઈ</value>
+	</data>
+	<data name="Topic name" xml:space="preserve">
+		<value>ડેટા હેન્ડલિંગ
+ભાગ ૧</value>
+	</data>
+	<data name="Yes" xml:space="preserve">
+		<value>હા</value>
+	</data>
+	<data name="YourScore" xml:space="preserve">
+		<value>તમારો સ્કોર છે</value>
+	</data>
+</root>

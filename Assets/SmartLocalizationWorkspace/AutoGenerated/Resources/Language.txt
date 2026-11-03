@@ -1,0 +1,682 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root><!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+	<data name="ActivityFinish" xml:space="preserve">
+		<value>You have completed the activity.</value>
+	</data>
+	<data name="Assessment" xml:space="preserve">
+		<value>Assessment</value>
+	</data>
+	<data name="Bar graph" xml:space="preserve">
+		<value>Bar graph</value>
+	</data>
+	<data name="BoxC1_1" xml:space="preserve">
+		<value>Name</value>
+	</data>
+	<data name="BoxC1_1 (1)" xml:space="preserve">
+		<value>One              represents 10 Trees</value>
+	</data>
+	<data name="BoxC1_1B" xml:space="preserve">
+		<value>Class marks</value>
+	</data>
+	<data name="BoxC1_1G" xml:space="preserve">
+		<value>Class marks</value>
+	</data>
+	<data name="BoxC1_1G2" xml:space="preserve">
+		<value>Class marks</value>
+	</data>
+	<data name="BoxC1_1O" xml:space="preserve">
+		<value>Favorite colour</value>
+	</data>
+	<data name="BoxC1_1O2" xml:space="preserve">
+		<value>Favorite colour</value>
+	</data>
+	<data name="BoxC1_2" xml:space="preserve">
+		<value>Apple</value>
+	</data>
+	<data name="BoxC1_2G" xml:space="preserve">
+		<value>New Value</value>
+	</data>
+	<data name="BoxC1_2O" xml:space="preserve">
+		<value>Purple</value>
+	</data>
+	<data name="BoxC1_2O2" xml:space="preserve">
+		<value>Purple</value>
+	</data>
+	<data name="BoxC1_3" xml:space="preserve">
+		<value>Peach</value>
+	</data>
+	<data name="BoxC1_3O" xml:space="preserve">
+		<value>Yellow</value>
+	</data>
+	<data name="BoxC1_3O2" xml:space="preserve">
+		<value>Yellow</value>
+	</data>
+	<data name="BoxC1_4" xml:space="preserve">
+		<value>Guava</value>
+	</data>
+	<data name="BoxC1_4O" xml:space="preserve">
+		<value>Red</value>
+	</data>
+	<data name="BoxC1_4O2" xml:space="preserve">
+		<value>Red</value>
+	</data>
+	<data name="BoxC1_5" xml:space="preserve">
+		<value>Pear</value>
+	</data>
+	<data name="BoxC1_5 (1)O" xml:space="preserve">
+		<value>Blue</value>
+	</data>
+	<data name="BoxC1_5 (1)O2" xml:space="preserve">
+		<value>Blue</value>
+	</data>
+	<data name="BoxC1_5 (2)O" xml:space="preserve">
+		<value>Orange</value>
+	</data>
+	<data name="BoxC1_5 (2)O2" xml:space="preserve">
+		<value>Orange</value>
+	</data>
+	<data name="BoxC1_5O" xml:space="preserve">
+		<value>Green</value>
+	</data>
+	<data name="BoxC1_5O2" xml:space="preserve">
+		<value>Green</value>
+	</data>
+	<data name="BoxC2_1" xml:space="preserve">
+		<value>Number of Trees</value>
+	</data>
+	<data name="BoxC2_1 (1)O" xml:space="preserve">
+		<value>Number of Students(frequency)</value>
+	</data>
+	<data name="BoxC2_1 (1)O2" xml:space="preserve">
+		<value>Number of Students(frequency)</value>
+	</data>
+	<data name="BoxC2_1G" xml:space="preserve">
+		<value>Frequency</value>
+	</data>
+	<data name="BoxC2_1G2" xml:space="preserve">
+		<value>Frequency</value>
+	</data>
+	<data name="BoxC2_1O" xml:space="preserve">
+		<value>Tally marks</value>
+	</data>
+	<data name="BoxC2_1O2" xml:space="preserve">
+		<value>Tally marks</value>
+	</data>
+	<data name="Btn_Exit" xml:space="preserve">
+		<value>Exit</value>
+	</data>
+	<data name="Btn_Graphs" xml:space="preserve">
+		<value>Graphs</value>
+	</data>
+	<data name="Btn_Grouping data" xml:space="preserve">
+		<value>Grouping data</value>
+	</data>
+	<data name="Btn_Histogram" xml:space="preserve">
+		<value>Histogram</value>
+	</data>
+	<data name="Btn_Introduction" xml:space="preserve">
+		<value>Introduction</value>
+	</data>
+	<data name="Btn_Organising data" xml:space="preserve">
+		<value>Organising data</value>
+	</data>
+	<data name="Btn_PlayAgain" xml:space="preserve">
+		<value>Play again</value>
+	</data>
+	<data name="C_L_1 (2)" xml:space="preserve">
+		<value>Hamster</value>
+	</data>
+	<data name="C_L_1 (2)0" xml:space="preserve">
+		<value>Rishi</value>
+	</data>
+	<data name="C_L_1 (3)" xml:space="preserve">
+		<value>Cat</value>
+	</data>
+	<data name="C_L_1 (3)0" xml:space="preserve">
+		<value>Nibha</value>
+	</data>
+	<data name="C_L_1 (4)" xml:space="preserve">
+		<value>Dog</value>
+	</data>
+	<data name="C_L_1 (4)0" xml:space="preserve">
+		<value>Neha</value>
+	</data>
+	<data name="C_L_1 (5)" xml:space="preserve">
+		<value>Bird</value>
+	</data>
+	<data name="C_L_1 (5)0" xml:space="preserve">
+		<value>Aditya</value>
+	</data>
+	<data name="C_L_1 (6)" xml:space="preserve">
+		<value>Fish</value>
+	</data>
+	<data name="C_L_1 (6)0" xml:space="preserve">
+		<value>Bina</value>
+	</data>
+	<data name="C_L_1 (7)" xml:space="preserve">
+		<value>Rabbit</value>
+	</data>
+	<data name="Double Bar Graph" xml:space="preserve">
+		<value>Double Bar Graph </value>
+	</data>
+	<data name="Exit" xml:space="preserve">
+		<value>Exit</value>
+	</data>
+	<data name="Gameplay" xml:space="preserve">
+		<value>Gameplay</value>
+	</data>
+	<data name="GridLineG" xml:space="preserve">
+		<value>X – axis: 1unit = 1 pet
+
+Y – axis: 1 unit = 1 student</value>
+	</data>
+	<data name="GridLineGH" xml:space="preserve">
+		<value>X – axis: 1unit = 10 marks</value>
+	</data>
+	<data name="GridLineGHisto" xml:space="preserve">
+		<value>X – axis: 1unit = 10 marks
+
+Y – axis: 1 unit = 2.5 student</value>
+	</data>
+	<data name="Grouping data" xml:space="preserve">
+		<value>Grouping data</value>
+	</data>
+	<data name="Height in cmH" xml:space="preserve">
+		<value>Height in cm</value>
+	</data>
+	<data name="Height in cmH0" xml:space="preserve">
+		<value>Height in cm</value>
+	</data>
+	<data name="Height of students" xml:space="preserve">
+		<value>Height of students</value>
+	</data>
+	<data name="HeightstudentsH" xml:space="preserve">
+		<value>Height of students</value>
+	</data>
+	<data name="Histogram" xml:space="preserve">
+		<value>Histogram</value>
+	</data>
+	<data name="Inst_1" xml:space="preserve">
+		<value>A data can be understood as the collection of information in the form of numerical figures or given set of facts.</value>
+	</data>
+	<data name="Inst_1 (1)" xml:space="preserve">
+		<value>Class interval :</value>
+	</data>
+	<data name="Inst_1 (2)" xml:space="preserve">
+		<value>Lower-class limit :</value>
+	</data>
+	<data name="Inst_1 (3)" xml:space="preserve">
+		<value>Upper-class limit :</value>
+	</data>
+	<data name="Inst_1 (5)" xml:space="preserve">
+		<value>Width :</value>
+	</data>
+	<data name="Inst_10" xml:space="preserve">
+		<value>Q) Which of the following statement is correct regarding pet survey?</value>
+	</data>
+	<data name="Inst_11" xml:space="preserve">
+		<value>A double bar graph is used to compare the two data simultaneously.</value>
+	</data>
+	<data name="Inst_12" xml:space="preserve">
+		<value>The width of two compairing data are also equal.</value>
+	</data>
+	<data name="Inst_13" xml:space="preserve">
+		<value>The two compairing data are stick to each other and this similar pattern is observed at an equal distance.</value>
+	</data>
+	<data name="Inst_14" xml:space="preserve">
+		<value>Q) Which among the following student’s performance improved the most from test 1 to test 2 ?</value>
+	</data>
+	<data name="Inst_15" xml:space="preserve">
+		<value>Q) Which among the following student’s performance degrade the most from test1 to test 2 ?</value>
+	</data>
+	<data name="Inst_16" xml:space="preserve">
+		<value>Raw data is collected and presented randomly.</value>
+	</data>
+	<data name="Inst_17" xml:space="preserve">
+		<value>When we arrange the raw data into a arranged systematic manner to make it more meaningful.This is called the Presentation of Data.</value>
+	</data>
+	<data name="Inst_18" xml:space="preserve">
+		<value>For example, 
+In a class of  28 students the favourite colours were as follows 
+purple 4, yellow 7, red 7, green 6, blue 5, orange 4.</value>
+	</data>
+	<data name="Inst_19" xml:space="preserve">
+		<value>Drag and drop the values into the correct highlighted place.</value>
+	</data>
+	<data name="Inst_2" xml:space="preserve">
+		<value>Data handling involve the representation of raw data into a systematic way so that it can be used to find some result.</value>
+	</data>
+	<data name="Inst_20" xml:space="preserve">
+		<value>The final value against each favorite colour indicates the frequency.</value>
+	</data>
+	<data name="Inst_21" xml:space="preserve">
+		<value>The table in whole is known as frequency distribution table.</value>
+	</data>
+	<data name="Inst_22" xml:space="preserve">
+		<value>A large number of quantities need to be grouped together to make observation.</value>
+	</data>
+	<data name="Inst_23" xml:space="preserve">
+		<value>This table in whole is known as grouped frequency distribution table.</value>
+	</data>
+	<data name="Inst_24" xml:space="preserve">
+		<value>For example, the marks obtained in a class of 40 students
+10, 9, 8, 7, 6, 5, 11,  12, 13, 13, 14,14, 15,15  16,  16, 17, 17, 18, 19 ,20,20
+, 21, 22, 22, 23, 24,24,  25, 25, 26, 27, 28,  28, 28, 29, 30, 30,30
+, 31,32,33,34,35,35,35,36,37,38, 38,39,40,40
+, 41,41,42,44, 45,46, 47,48</value>
+	</data>
+	<data name="Inst_25" xml:space="preserve">
+		<value>When we classify all the observations according to their size into several groups.</value>
+	</data>
+	<data name="Inst_26" xml:space="preserve">
+		<value>The lowest number in every class interval.</value>
+	</data>
+	<data name="Inst_27" xml:space="preserve">
+		<value>The highest number in every class interval.</value>
+	</data>
+	<data name="Inst_28" xml:space="preserve">
+		<value>The diffrence in value between highest number to the lowest number.</value>
+	</data>
+	<data name="Inst_29" xml:space="preserve">
+		<value>Click on highlighted button to know more about it.</value>
+	</data>
+	<data name="Inst_3" xml:space="preserve">
+		<value>You have already learn about pictograph, bar graph and double bar graph. 
+But again, we are going through it to brush up your knowlegde.</value>
+	</data>
+	<data name="Inst_4" xml:space="preserve">
+		<value>It is the picture representation of given data using easy symbols.
+ The number of picture represents the quantity of the data.</value>
+	</data>
+	<data name="Inst_5" xml:space="preserve">
+		<value>For example, consider the following problem:</value>
+	</data>
+	<data name="Inst_6" xml:space="preserve">
+		<value>Bar graph is often used when it is become difficult to represent data by pictograph.</value>
+	</data>
+	<data name="Inst_7" xml:space="preserve">
+		<value>The bar height gives the quantity for each provided category.</value>
+	</data>
+	<data name="Inst_8" xml:space="preserve">
+		<value>Bars are representated at a  equal distance from each other and  they are of equal width.</value>
+	</data>
+	<data name="Inst_9" xml:space="preserve">
+		<value>Q) Which pet is least favoured?</value>
+	</data>
+	<data name="Inst_Remark" xml:space="preserve">
+		<value>few marks are comes under two class interval but we count them in only one.It is common that we count the common observation into higher class. Hence, 10 will not come under class 0-10 but under class 10-20.</value>
+	</data>
+	<data name="MarksH" xml:space="preserve">
+		<value>Marks</value>
+	</data>
+	<data name="MCQQuizInst" xml:space="preserve">
+		<value>► The following quiz provides Multiple Choice Questions.
+► Read all the given answers and click on the correct answer.
+► You can attempt the same question twice.
+► You score 2 points for each correct answer on the first attempt.
+► You score 1 point for each correct answer on the second attempt.</value>
+	</data>
+	<data name="MCQQuizTitle" xml:space="preserve">
+		<value>MCQ Quiz Instructions</value>
+	</data>
+	<data name="No" xml:space="preserve">
+		<value>No</value>
+	</data>
+	<data name="Option_1" xml:space="preserve">
+		<value>a) Bird</value>
+	</data>
+	<data name="Option_2" xml:space="preserve">
+		<value>b) FIsh</value>
+	</data>
+	<data name="Option_3" xml:space="preserve">
+		<value>c) Hamster</value>
+	</data>
+	<data name="Option_4" xml:space="preserve">
+		<value>d) Cat</value>
+	</data>
+	<data name="Option10_1" xml:space="preserve">
+		<value>a) Cat is favoured  twice as compared to hamster.</value>
+	</data>
+	<data name="Option10_2" xml:space="preserve">
+		<value>b) Dog is favoured twice as compared to fish.</value>
+	</data>
+	<data name="Option10_3" xml:space="preserve">
+		<value>c) Bird and dog are equally favoured.</value>
+	</data>
+	<data name="Option10_4" xml:space="preserve">
+		<value>d) Rabbit is favoured thrice as compared to bird.</value>
+	</data>
+	<data name="Option14_1" xml:space="preserve">
+		<value>a) Aditya</value>
+	</data>
+	<data name="Option14_2" xml:space="preserve">
+		<value>b) Neha</value>
+	</data>
+	<data name="Option14_3" xml:space="preserve">
+		<value>c) Bina</value>
+	</data>
+	<data name="Option14_4" xml:space="preserve">
+		<value>d) Nibha</value>
+	</data>
+	<data name="Option15_1" xml:space="preserve">
+		<value>a) Aditya</value>
+	</data>
+	<data name="Option15_2" xml:space="preserve">
+		<value>b) Neha</value>
+	</data>
+	<data name="Option15_3" xml:space="preserve">
+		<value>c) Bina</value>
+	</data>
+	<data name="Option15_4" xml:space="preserve">
+		<value>d) Nibha</value>
+	</data>
+	<data name="Option2_1" xml:space="preserve">
+		<value>a) The number of pear tree is greater than apple.</value>
+	</data>
+	<data name="Option2_2" xml:space="preserve">
+		<value>b) The number of apple tree is lesser than peach.</value>
+	</data>
+	<data name="Option2_3" xml:space="preserve">
+		<value>c) The number of peach tree is greater than guava.</value>
+	</data>
+	<data name="Option2_4" xml:space="preserve">
+		<value>d) The number of peach tree is lesser than apple.</value>
+	</data>
+	<data name="OptionQ1_1" xml:space="preserve">
+		<value>a) Data</value>
+	</data>
+	<data name="OptionQ1_2" xml:space="preserve">
+		<value>b) Tally</value>
+	</data>
+	<data name="OptionQ1_3" xml:space="preserve">
+		<value>c) Frequency </value>
+	</data>
+	<data name="OptionQ1_4" xml:space="preserve">
+		<value>d) Group</value>
+	</data>
+	<data name="OptionQ2_1" xml:space="preserve">
+		<value>a) Grouped data</value>
+	</data>
+	<data name="OptionQ2_2" xml:space="preserve">
+		<value>b) Width</value>
+	</data>
+	<data name="OptionQ2_3" xml:space="preserve">
+		<value>c) Histogram</value>
+	</data>
+	<data name="OptionQ2_4" xml:space="preserve">
+		<value>d) Frequency</value>
+	</data>
+	<data name="OptionQ4_1" xml:space="preserve">
+		<value>a) Collection of data</value>
+	</data>
+	<data name="OptionQ4_2" xml:space="preserve">
+		<value>b) Class interval</value>
+	</data>
+	<data name="OptionQ4_3" xml:space="preserve">
+		<value>c) Histogram</value>
+	</data>
+	<data name="OptionQ4_4" xml:space="preserve">
+		<value>d) Frequency</value>
+	</data>
+	<data name="Organising data" xml:space="preserve">
+		<value>Organising data</value>
+	</data>
+	<data name="Pictograph" xml:space="preserve">
+		<value>Pictograph</value>
+	</data>
+	<data name="PlayAgain" xml:space="preserve">
+		<value>Play Again</value>
+	</data>
+	<data name="Q_1" xml:space="preserve">
+		<value>Q) How many peach trees are there ?</value>
+	</data>
+	<data name="Q_2" xml:space="preserve">
+		<value>Q) Which of the following statement is true?</value>
+	</data>
+	<data name="Q_3" xml:space="preserve">
+		<value>Q3) If 30-40 is the class interval of grouped data, then the lower class limit is:</value>
+	</data>
+	<data name="Q_4" xml:space="preserve">
+		<value>Q4) For a grouped data, each of the individual group is called:</value>
+	</data>
+	<data name="Q_40" xml:space="preserve">
+		<value>Q4) For a grouped data, each of the individual group is called:</value>
+	</data>
+	<data name="Q_5" xml:space="preserve">
+		<value>Q5) Observe the histogram and answer the question follows: 
+The total number of students is </value>
+	</data>
+	<data name="Q_one" xml:space="preserve">
+		<value>Q) The number of times a particular number occurs is called ?</value>
+	</data>
+	<data name="Q_two" xml:space="preserve">
+		<value>Q2) The difference between the upper-class limit and lower class limit of a class interval is called: </value>
+	</data>
+	<data name="QuitMessage" xml:space="preserve">
+		<value>Are you sure you want to quit?</value>
+	</data>
+	<data name="Quiz1" xml:space="preserve">
+		<value>Which of the following is not a measure of central tendency?</value>
+	</data>
+	<data name="Quiz1_1" xml:space="preserve">
+		<value>Mean</value>
+	</data>
+	<data name="Quiz1_2" xml:space="preserve">
+		<value>Median</value>
+	</data>
+	<data name="Quiz1_3" xml:space="preserve">
+		<value>Mode</value>
+	</data>
+	<data name="Quiz1_4" xml:space="preserve">
+		<value>Range</value>
+	</data>
+	<data name="Quiz2" xml:space="preserve">
+		<value>The mode of a data set is:</value>
+	</data>
+	<data name="Quiz2_1" xml:space="preserve">
+		<value>The most frequently occurring value</value>
+	</data>
+	<data name="Quiz2_2" xml:space="preserve">
+		<value>The middle value when the data is arranged in ascending order</value>
+	</data>
+	<data name="Quiz2_3" xml:space="preserve">
+		<value>The average of all the values</value>
+	</data>
+	<data name="Quiz2_4" xml:space="preserve">
+		<value>The difference between the highest and lowest values</value>
+	</data>
+	<data name="Quiz3" xml:space="preserve">
+		<value>The range of a data set is calculated by:</value>
+	</data>
+	<data name="Quiz3_1" xml:space="preserve">
+		<value>Finding the difference between the mean and median</value>
+	</data>
+	<data name="Quiz3_2" xml:space="preserve">
+		<value>Adding all the values and dividing by the number of values</value>
+	</data>
+	<data name="Quiz3_3" xml:space="preserve">
+		<value>Finding the difference between the highest and lowest values</value>
+	</data>
+	<data name="Quiz3_4" xml:space="preserve">
+		<value>Counting the number of values in the data set</value>
+	</data>
+	<data name="Quiz4" xml:space="preserve">
+		<value>The mean of the data set {4, 7, 9, 11, 13} is:</value>
+	</data>
+	<data name="Quiz4_1" xml:space="preserve">
+		<value>7</value>
+	</data>
+	<data name="Quiz4_2" xml:space="preserve">
+		<value>8.5</value>
+	</data>
+	<data name="Quiz4_3" xml:space="preserve">
+		<value>9</value>
+	</data>
+	<data name="Quiz4_4" xml:space="preserve">
+		<value>10</value>
+	</data>
+	<data name="Quiz5" xml:space="preserve">
+		<value>The median of the data set {12, 14, 16, 18, 20} is:</value>
+	</data>
+	<data name="Quiz5_1" xml:space="preserve">
+		<value>14</value>
+	</data>
+	<data name="Quiz5_2" xml:space="preserve">
+		<value>16</value>
+	</data>
+	<data name="Quiz5_3" xml:space="preserve">
+		<value>18</value>
+	</data>
+	<data name="Quiz5_4" xml:space="preserve">
+		<value>20</value>
+	</data>
+	<data name="Remark btn" xml:space="preserve">
+		<value>Remark</value>
+	</data>
+	<data name="Start" xml:space="preserve">
+		<value>Start</value>
+	</data>
+	<data name="TeacherClosedMessage" xml:space="preserve">
+		<value>Teacher closed the application.
+Closing....</value>
+	</data>
+	<data name="TeacherMessage" xml:space="preserve">
+		<value>Paused by teacher.
+Please wait.</value>
+	</data>
+	<data name="Text_Expenses" xml:space="preserve">
+		<value>Number of students</value>
+	</data>
+	<data name="Text_Height" xml:space="preserve">
+		<value>Height in cm</value>
+	</data>
+	<data name="Text_HeightStudent" xml:space="preserve">
+		<value>Height of students</value>
+	</data>
+	<data name="Topic name" xml:space="preserve">
+		<value>Data Handling
+ Part 1</value>
+	</data>
+	<data name="Yes" xml:space="preserve">
+		<value>Yes</value>
+	</data>
+	<data name="YourScore" xml:space="preserve">
+		<value>Your score is</value>
+	</data>
+</root>

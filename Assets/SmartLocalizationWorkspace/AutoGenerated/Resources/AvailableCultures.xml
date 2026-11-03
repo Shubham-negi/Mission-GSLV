@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<SmartCultureCollections xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <version>0</version>
+  <CultureInfos>
+    <CultureInfo>
+      <languageCode>hi-IN</languageCode>
+      <englishName>Hindi (India)</englishName>
+      <nativeName>हिन्दी (भारत)</nativeName>
+      <isRightToLeft>false</isRightToLeft>
+    </CultureInfo>
+    <CultureInfo>
+      <languageCode>gu-IN</languageCode>
+      <englishName>Gujarati (India)</englishName>
+      <nativeName>ગુજરાતી (ભારત)</nativeName>
+      <isRightToLeft>false</isRightToLeft>
+    </CultureInfo>
+    <CultureInfo>
+      <languageCode>en-GB</languageCode>
+      <englishName>English (United Kingdom)</englishName>
+      <nativeName>English (United Kingdom)</nativeName>
+      <isRightToLeft>false</isRightToLeft>
+    </CultureInfo>
+  </CultureInfos>
+</SmartCultureCollections>
