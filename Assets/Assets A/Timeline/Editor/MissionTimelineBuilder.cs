@@ -172,7 +172,7 @@ namespace GslvMission.EditorTools
                 EditorSceneManager.MarkSceneDirty(target);
                 AssetDatabase.SaveAssets();
                 if (!wasDirty) EditorSceneManager.SaveScene(target);
-                Debug.Log("[GSLV] Upgraded the four engine plumes in Scene 1" + (wasDirty ? "; scene was already dirty, press Ctrl+S to keep it." : "."));
+                Debug.Log("[GSLV] Upgraded five nozzle-aligned plume emitters in Scene 1" + (wasDirty ? "; scene was already dirty, press Ctrl+S to keep it." : "."));
             }
             catch (Exception e)
             {
@@ -473,51 +473,57 @@ namespace GslvMission.EditorTools
             return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
         }
 
-        // A long, soft-edged flame tongue. The baked turbulence and shock-cell bands make the exhaust read as
-        // energetic without a costly distortion shader or extra particle layers (important for two-eye VR rendering).
+        // Four animated exhaust tongues in one atlas. Real launch footage reads as a continuous overexposed core with
+        // a turbulent boundary, not a string of visible shock-diamond sprites, so brightness stays nearly uniform along
+        // each tongue while its edge and centreline change between frames.
         static Texture2D FlameTexture()
         {
             string path = TexFolder + "/Engine Flame Tongue.png";
-            var existing = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
-            if (existing != null) return existing;
-
-            const int W = 128, H = 256;
+            const int TileW = 128, TileH = 256, Columns = 2, Rows = 2;
+            const int W = TileW * Columns, H = TileH * Rows;
             var tex = new Texture2D(W, H, TextureFormat.RGBA32, false);
-            for (int y = 0; y < H; y++)
-                for (int x = 0; x < W; x++)
-                {
-                    float u = (x + 0.5f) / W;
-                    float v = (y + 0.5f) / H;
-                    float across = Mathf.Abs(u * 2f - 1f);
+            for (int frame = 0; frame < Columns * Rows; frame++)
+                for (int y = 0; y < TileH; y++)
+                    for (int x = 0; x < TileW; x++)
+                    {
+                        float u = (x + 0.5f) / TileW;
+                        float v = (y + 0.5f) / TileH;
+                        float phase = frame * 1.731f;
+                        float coarse = Mathf.PerlinNoise(u * 4.2f + 9.1f + phase, v * 7.4f + 3.3f + phase * 0.7f);
+                        float fine = Mathf.PerlinNoise(u * 18f + 31.7f + phase * 1.9f, v * 29f + 17.6f + phase);
 
-                    // Pinched at the nozzle and feathered at the end, with two scales of baked-in turbulence.
-                    float envelope = Mathf.Sin(Mathf.PI * Mathf.Pow(v, 0.82f));
-                    float width = Mathf.Lerp(0.17f, 0.74f, Mathf.Pow(envelope, 0.62f));
-                    float coarse = Mathf.PerlinNoise(u * 4.5f + 11.3f, v * 8f + 2.7f);
-                    float fine = Mathf.PerlinNoise(u * 13f + 37.1f, v * 22f + 19.4f);
-                    width *= Mathf.Lerp(0.82f, 1.12f, coarse * 0.7f + fine * 0.3f);
-                    float edge = Mathf.Clamp01((width - across) / 0.20f);
-                    edge = edge * edge * (3f - 2f * edge);
+                        // A wide, connected tongue with a gently wandering centreline and a torn outer boundary.
+                        float centre = Mathf.Sin(v * 10f + phase * 2.1f) * 0.025f + (coarse - 0.5f) * 0.07f;
+                        float across = Mathf.Abs(u * 2f - 1f - centre);
+                        float envelope = Mathf.Sin(Mathf.PI * v);
+                        float width = 0.42f + 0.22f * Mathf.Pow(Mathf.Max(0f, envelope), 0.7f);
+                        width *= Mathf.Lerp(0.88f, 1.12f, coarse * 0.75f + fine * 0.25f);
+                        float tornEdge = (fine - 0.5f) * 0.075f + (coarse - 0.5f) * 0.04f;
+                        float edge = Mathf.Clamp01((width + tornEdge - across) / 0.13f);
+                        edge = edge * edge * (3f - 2f * edge);
 
-                    float endFade = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(v * 9f))
-                        * Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((1f - v) * 4f));
-                    float core = Mathf.Exp(-across * across * 7.5f);
-                    // Bright compression cells hint at the diamond pattern visible in high-speed rocket exhaust.
-                    float cells = Mathf.Pow(Mathf.Max(0f, Mathf.Sin((v * 5.2f + 0.08f) * Mathf.PI)), 7f);
-                    float brightness = Mathf.Clamp01(0.48f + core * 0.42f + cells * core * 0.28f);
-                    float alpha = edge * endFade * Mathf.Lerp(0.68f, 1f, core);
-                    tex.SetPixel(x, y, new Color(brightness, brightness, brightness, alpha));
-                }
+                        // Only the very ends fade; overlapping particles therefore form one unbroken luminous column.
+                        float endFade = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(v * 9f))
+                            * Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((1f - v) * 6f));
+                        float core = Mathf.Exp(-across * across * 8.5f);
+                        float brightness = Mathf.Lerp(0.82f, 1f, core);
+                        float textureBreakup = Mathf.Lerp(0.82f, 1f, fine);
+                        float alpha = edge * endFade * Mathf.Lerp(0.72f, 1f, core) * textureBreakup;
+                        int px = (frame % Columns) * TileW + x;
+                        int py = (frame / Columns) * TileH + y;
+                        tex.SetPixel(px, py, new Color(brightness, brightness, brightness, alpha));
+                    }
 
             File.WriteAllBytes(path, tex.EncodeToPNG());
             Object.DestroyImmediate(tex);
-            AssetDatabase.ImportAsset(path);
+            AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
             var imp = (TextureImporter)AssetImporter.GetAtPath(path);
             imp.alphaIsTransparency = true;
             imp.mipmapEnabled = true;       // avoids shimmer in the headset as the plume recedes
             imp.wrapMode = TextureWrapMode.Clamp;
             imp.filterMode = FilterMode.Bilinear;
-            imp.textureCompression = TextureImporterCompression.Compressed;
+            imp.maxTextureSize = 512;
+            imp.textureCompression = TextureImporterCompression.Uncompressed; // tiny atlas; clean alpha is worth 0.5 MB
             imp.SaveAndReimport();
             return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
         }
@@ -830,7 +836,26 @@ namespace GslvMission.EditorTools
             if (pts.Count == 0)
             {
                 var b = WorldBounds(part);
-                return new List<Nozzle> { new Nozzle { exit = new Vector3(b.center.x, b.min.y, b.center.z), radius = Mathf.Min(b.extents.x, b.extents.z) } };
+                float radius = Mathf.Min(b.extents.x, b.extents.z);
+                // Keep source FBXs non-readable in builds (lower mesh-memory use). These normalized bounds offsets
+                // reproduce the measured nozzle lips when Unity cannot expose the imported vertex array.
+                if (part.name == "Louncher.001")
+                {
+                    float halfSpacing = b.size.z * 0.2865f;
+                    return new List<Nozzle>
+                    {
+                        new Nozzle { exit = new Vector3(b.center.x, b.min.y, b.center.z - halfSpacing), radius = radius },
+                        new Nozzle { exit = new Vector3(b.center.x, b.min.y, b.center.z + halfSpacing), radius = radius }
+                    };
+                }
+                float x = b.center.x, z = b.center.z;
+                if (part.name == "Louncher.006")
+                {
+                    // Its side attachment skews the renderer bounds away from the bell centre.
+                    x -= b.size.x * 0.164f;
+                    z -= b.size.z * 0.086f;
+                }
+                return new List<Nozzle> { new Nozzle { exit = new Vector3(x, b.min.y, z), radius = radius } };
             }
             float minY = pts.Min(p => p.y);
             var lip = pts.Where(p => p.y <= minY + 0.05f).ToList();
@@ -1644,13 +1669,13 @@ namespace GslvMission.EditorTools
                 if (nz[0] == "Flame L110")
                 {
                     // two Vikas engines side by side: one flame from each, switched on and off together through the parent
-                    var pair = NewObject(nz[0], flames.transform);
+                    var pair = NewObject(nz[0], part);
                     pair.transform.position = exits.Aggregate(Vector3.zero, (s, x) => s + x.exit) / exits.Count;
                     for (int i = 0; i < exits.Count; i++)
                         MakeFlame(nz[0] + " " + (char)('A' + i), pair.transform, exits[i].exit, 2.0f, new Color(1f, 0.94f, 0.76f), new Color(1f, 0.30f, 0.035f), 0.82f, true);
                     Reg(nz[0], pair);
                 }
-                else if (nz[0] == "Flame C25") Reg(nz[0], MakeFlame(nz[0], flames.transform, at, 1.7f, new Color(0.88f, 0.96f, 1f), new Color(0.28f, 0.46f, 1f), 0.72f, true));
+                else if (nz[0] == "Flame C25") Reg(nz[0], MakeFlame(nz[0], part, at, 1.7f, new Color(0.88f, 0.96f, 1f), new Color(0.28f, 0.46f, 1f), 0.72f, true));
                 else Reg(nz[0], MakeFlame(nz[0], flames.transform, at, 2.0f, new Color(1f, 1f, 0.88f), new Color(1f, 0.48f, 0.055f), 1f));
             }
 
@@ -1839,40 +1864,58 @@ namespace GslvMission.EditorTools
         {
             var main = ps.main;
             main.loop = true;
-            main.startLifetime = new ParticleSystem.MinMaxCurve(0.38f, 0.56f);
-            main.startSpeed = new ParticleSystem.MinMaxCurve(17f, 24f);
-            main.startSize = new ParticleSystem.MinMaxCurve(size * 0.48f, size * 0.72f);
-            main.startColor = new Color(hot.r, hot.g, hot.b, strength);
+            main.startLifetime = new ParticleSystem.MinMaxCurve(0.27f, 0.38f);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(18f, 26f);
+            main.startSize = new ParticleSystem.MinMaxCurve(size * 0.50f, size * 0.67f);
+            main.startRotation = new ParticleSystem.MinMaxCurve(-0.07f, 0.07f);
+            main.startColor = new Color(1f, 0.985f, 0.90f, strength);
             main.simulationSpace = attached ? ParticleSystemSimulationSpace.Local : ParticleSystemSimulationSpace.World;
-            main.maxParticles = 64;
+            bool oneOfDualL110 = ps.name.StartsWith("Flame L110 ");
+            bool upperStage = ps.name == "Flame C25";
+            main.maxParticles = oneOfDualL110 ? 40 : 56;
             var em = ps.emission;
-            em.rateOverTime = 48f;
-            // The quad is drawn ahead of each particle (negative stretch, below), and its bright part starts about a sixth
-            // of the way along it, so the particles start that far up inside the bell and the fire begins at the nozzle mouth.
-            float birthLength = size * 0.6f * 0.9f * 3.2f + 20.5f * 0.16f;
+            // High emission plus short lifetime hides individual sprites while keeping only 20-35 particles alive per nozzle.
+            em.rateOverTime = oneOfDualL110 ? 72f : (upperStage ? 84f : 110f);
             var sh = ps.shape;
             sh.shapeType = ParticleSystemShapeType.Cone;
-            sh.angle = 3.2f;
-            sh.radius = size * 0.13f;
-            sh.radiusThickness = 0.75f;
-            sh.position = new Vector3(0f, 0f, -Mathf.Min(0.16f * birthLength, 1f));   // the cone emits along +z, which points down
+            sh.angle = 2.2f;
+            sh.radius = size * 0.105f;
+            sh.radiusThickness = 0.45f;
+            sh.position = Vector3.zero; // transform is already the measured nozzle lip
             var col = ps.colorOverLifetime;
             col.enabled = true;
             var grad = new Gradient();
-            grad.SetKeys(new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(hot, 0.12f), new GradientColorKey(mid, 0.52f), new GradientColorKey(mid * 0.42f, 1f) },
-                new[] { new GradientAlphaKey(strength, 0f), new GradientAlphaKey(strength, 0.28f), new GradientAlphaKey(0.72f * strength, 0.68f), new GradientAlphaKey(0f, 1f) });
+            Color warmWhite = Color.Lerp(hot, Color.white, 0.72f);
+            Color amber = Color.Lerp(mid, hot, 0.28f);
+            grad.SetKeys(new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(warmWhite, 0.30f), new GradientColorKey(hot, 0.56f), new GradientColorKey(amber, 0.82f), new GradientColorKey(mid, 1f) },
+                new[] { new GradientAlphaKey(strength, 0f), new GradientAlphaKey(strength, 0.62f), new GradientAlphaKey(0.80f * strength, 0.82f), new GradientAlphaKey(0f, 1f) });
             col.color = grad;
             var sz = ps.sizeOverLifetime;
             sz.enabled = true;
-            sz.size = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(new Keyframe(0f, 0.9f), new Keyframe(0.2f, 1.1f), new Keyframe(0.62f, 0.85f), new Keyframe(1f, 0.15f)));   // full width at the mouth
+            sz.size = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(new Keyframe(0f, 0.68f), new Keyframe(0.18f, 0.92f), new Keyframe(0.58f, 1.08f), new Keyframe(0.84f, 0.92f), new Keyframe(1f, 0.38f)));
+
+            var noise = ps.noise;
+            noise.enabled = true;
+            noise.strength = size * 0.09f;
+            noise.frequency = 1.65f;
+            noise.scrollSpeed = 0.55f;
+            noise.damping = true;
+
+            var sheet = ps.textureSheetAnimation;
+            sheet.enabled = true;
+            sheet.numTilesX = 2;
+            sheet.numTilesY = 2;
+            sheet.animation = ParticleSystemAnimationType.WholeSheet;
+            sheet.frameOverTime = new ParticleSystem.MinMaxCurve(1f, AnimationCurve.Linear(0f, 0f, 1f, 1f));
+            sheet.startFrame = new ParticleSystem.MinMaxCurve(0f, 0.999f);
+            sheet.cycleCount = 1;
 
             var renderer = ps.GetComponent<ParticleSystemRenderer>();
             renderer.sharedMaterial = material;
             renderer.renderMode = ParticleSystemRenderMode.Stretch;
-            // negative: the stretched quad reaches ahead of the particle, down and away from the engine; positive scales
-            // trail it back up, which drew the fire up the side of the booster instead of out of its nozzle
-            renderer.lengthScale = -3.2f;
-            renderer.velocityScale = -0.16f;
+            // The small negative stretch reaches down from the moving particle; dense overlap makes a continuous column.
+            renderer.lengthScale = -1.65f;
+            renderer.velocityScale = -0.055f;
             renderer.cameraVelocityScale = 0f;
             renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             renderer.receiveShadows = false;
