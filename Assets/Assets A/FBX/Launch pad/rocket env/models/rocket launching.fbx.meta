@@ -3,7 +3,17 @@ guid: 5b9a9b1c18f71ab428d3039844213f6a
 ModelImporter:
   serializedVersion: 19301
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Rocket_cart_1
+    second: {fileID: 2100000, guid: 620a75ae5a5278e4fa0a7d563d3a1677, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Rocket_cart_2
+    second: {fileID: 2100000, guid: deaff7ec0f1902049963bb5ae28e6fb4, type: 2}
   materials:
     materialImportMode: 1
     materialName: 0
@@ -45,7 +55,7 @@ ModelImporter:
     importLights: 1
     fileIdsGeneration: 2
     swapUVChannels: 0
-    generateSecondaryUV: 0
+    generateSecondaryUV: 1
     useFileUnits: 1
     keepQuads: 0
     weldVertices: 1

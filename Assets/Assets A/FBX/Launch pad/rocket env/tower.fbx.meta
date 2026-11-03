@@ -3,7 +3,17 @@ guid: 387ef6ca3fbd4e346a33be297f1b6a28
 ModelImporter:
   serializedVersion: 19301
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Building
+    second: {fileID: 2100000, guid: faffb776b3efd304892216c1bb48dcf7, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Chandrayan_3_luncher
+    second: {fileID: 2100000, guid: 801c367d13dc04042adcd8e7aeb59f8b, type: 2}
   materials:
     materialImportMode: 1
     materialName: 0
@@ -45,7 +55,7 @@ ModelImporter:
     importLights: 1
     fileIdsGeneration: 2
     swapUVChannels: 0
-    generateSecondaryUV: 0
+    generateSecondaryUV: 1
     useFileUnits: 1
     keepQuads: 0
     weldVertices: 1

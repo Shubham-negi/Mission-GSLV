@@ -1,1 +1,0 @@
-Upgrade the existing Scene 1 engine plumes without rebuilding the mission timeline.

@@ -27,7 +27,7 @@ namespace GslvSpace.EditorTools
         const string RootName = "SPACE ENVIRONMENT";
         const string UndoName = "Build Space Environment";
         const string Title = "Space Environment";
-        const string LaunchpadPrefabFolder = "Assets/Assets A/Art/FBX/Launch pad/";
+        const string LaunchpadPrefabFolder = "Assets/Assets A/FBX/Launch pad/";
         const string ImportMarker = "gslv-space-import";
 
         const string EarthAlbedoPath = Folder + "/Textures/Earth_Diff.jpg";
@@ -36,7 +36,7 @@ namespace GslvSpace.EditorTools
         const string StarsPath = Folder + "/Skybox/2k_stars_milky_way.jpg";
         const string ProbeModelPath = Folder + "/Models/Probe.FBX";
         const string ProbeTexturePath = Folder + "/Models/Probe.png";
-        const string RocketModelPath = "Assets/Assets A/Art/FBX/Launch pad/rocket env/SLV_3_Textured.fbx";
+        const string RocketModelPath = "Assets/Assets A/FBX/Launch pad/rocket env/SLV_3_Textured.fbx";
 
         // Layout in metres, relative to the learner's eye looking along +Z.
         const float ParkHeight = 5000f;                  // editing position above the launch pad
@@ -629,7 +629,7 @@ namespace GslvSpace.EditorTools
             return rigs.Count > 0 ? rigs[0] : null;
         }
 
-        // Only the launch-pad environment prefab(s) the user built under Art/FBX/Launch pad.
+        // Only the launch-pad environment prefab(s) the user built under FBX/Launch pad.
         static List<GameObject> FindLaunchpadRoots(Scene scene)
         {
             var result = new List<GameObject>();

@@ -11,7 +11,7 @@ namespace GslvMission.EditorTools
     /// <summary>
     /// Build and Run for the headset, the same as File > Build And Run (the scenes ticked in Build Settings, the Android
     /// player settings as they are), started by a trigger file so it can be queued from outside the editor. The APK goes to
-    /// the temp folder; the result is written to %TEMP%\GSLV_Device_Build.txt. A queued Timeline rebuild or scenery fix runs first.
+    /// the temp folder; the result is written to %TEMP%\GSLV_Device_Build.txt. A queued Timeline rebuild, scenery fix or light bake runs first.
     /// </summary>
     [InitializeOnLoad]
     static class DeviceBuild
@@ -19,22 +19,20 @@ namespace GslvMission.EditorTools
         const string Trigger = "Assets/Assets A/Timeline/Editor/BUILD_DEVICE_ONCE.txt";
         const string TimelineTrigger = "Assets/Assets A/Timeline/Editor/BUILD_TIMELINE_ONCE.txt";
         const string SceneryTrigger = "Assets/Assets A/Timeline/Editor/FIX_SCENERY_ONCE.txt";
+        const string BakeTrigger = "Assets/Assets A/Timeline/Editor/BAKE_LIGHT_ONCE.txt";
         static readonly string StatusFile = Path.Combine(Path.GetTempPath(), "GSLV_Device_Build.txt");
         static readonly string ApkPath = Path.Combine(Path.Combine(Path.GetTempPath(), "GSLV_Device"), "GSLV Mission.apk");
 
         static DeviceBuild()
         {
-            if (File.Exists(Trigger)) EditorApplication.delayCall += RunFromTrigger;
+            if (File.Exists(Trigger)) EditorApplication.update += RunFromTrigger;   // update, not delayCall: only update ticks with the editor in the background
         }
 
         static void RunFromTrigger()
         {
+            if (EditorApplication.isPlayingOrWillChangePlaymode || EditorApplication.isCompiling || EditorApplication.isUpdating || File.Exists(TimelineTrigger) || File.Exists(SceneryTrigger) || File.Exists(BakeTrigger)) return;   // next tick
+            EditorApplication.update -= RunFromTrigger;
             if (!File.Exists(Trigger)) return;
-            if (EditorApplication.isPlayingOrWillChangePlaymode || EditorApplication.isCompiling || EditorApplication.isUpdating || File.Exists(TimelineTrigger) || File.Exists(SceneryTrigger))
-            {
-                EditorApplication.delayCall += RunFromTrigger;
-                return;
-            }
             AssetDatabase.DeleteAsset(Trigger);
             if (File.Exists(Trigger)) File.Delete(Trigger);
             Build();

@@ -34,11 +34,12 @@ namespace GslvMission.EditorTools
         const string TexFolder = Folder + "/Textures";
         const string TimelinePath = Folder + "/GSLV Mission.playable";
         const string Trigger = Folder + "/Editor/BUILD_TIMELINE_ONCE.txt";
-        const string PlumeUpgradeTrigger = Folder + "/Editor/UPGRADE_PLUMES_ONCE.txt";
         const string MainScenePath = "Assets/Assets A/Scene/Scene 1.unity";
         const string VoFolder = "Assets/Assets A/VoiceOver";
         const string SfxFolder = "Assets/Assets A/SFX";
-        const string GslvModelPath = "Assets/Assets A/Art/FBX/GSLV Rocket/gslv rocket model com.fbx";
+        static string GslvModelPath { get { return AssetDatabase.GUIDToAssetPath("58a30b1eac53f624ebfacef5314fbd33"); } }   // gslv rocket model com.fbx, wherever it is moved
+        const string MeshFolder = Folder + "/Meshes";
+        const string MergedName = "Merged Parts";
         const string ProbePath = "Assets/Assets A/Space/Models/Probe.FBX";
         const string ProbeTexPath = "Assets/Assets A/Space/Models/Probe.png";
         const string KitFolder = "Assets/Assets A/UI/GSLV UI Kit";   // sprites of the Mission GSLV UI sheets (drawn by Source~/MakeUiKit.ps1)
@@ -118,18 +119,14 @@ namespace GslvMission.EditorTools
 
         static MissionTimelineBuilder()
         {
-            if (File.Exists(Trigger)) EditorApplication.delayCall += RunFromTrigger;
-            if (File.Exists(PlumeUpgradeTrigger)) EditorApplication.delayCall += RunPlumeUpgradeFromTrigger;
+            if (File.Exists(Trigger)) EditorApplication.update += RunFromTrigger;   // update, not delayCall: only update ticks with the editor in the background
         }
 
         static void RunFromTrigger()
         {
+            if (EditorApplication.isPlayingOrWillChangePlaymode || EditorApplication.isCompiling || EditorApplication.isUpdating) return;   // next tick
+            EditorApplication.update -= RunFromTrigger;
             if (!File.Exists(Trigger)) return;
-            if (EditorApplication.isPlayingOrWillChangePlaymode || EditorApplication.isCompiling || EditorApplication.isUpdating)
-            {
-                EditorApplication.delayCall += RunFromTrigger;
-                return;
-            }
             AssetDatabase.DeleteAsset(Trigger);
             if (File.Exists(Trigger)) File.Delete(Trigger);
             Run(false);
@@ -137,18 +134,9 @@ namespace GslvMission.EditorTools
 
         // Applies the improved plume to the already-generated scene without rebuilding the mission. This is kept
         // separate because a plume-only visual update should not depend on source FBX files or replace other work.
-        static void RunPlumeUpgradeFromTrigger()
+        [MenuItem("GSLV/Timeline/Upgrade Engine Plumes")]
+        static void UpgradeLaunchPlumes()
         {
-            if (!File.Exists(PlumeUpgradeTrigger)) return;
-            if (EditorApplication.isPlayingOrWillChangePlaymode || EditorApplication.isCompiling || EditorApplication.isUpdating)
-            {
-                EditorApplication.delayCall += RunPlumeUpgradeFromTrigger;
-                return;
-            }
-
-            AssetDatabase.DeleteAsset(PlumeUpgradeTrigger);
-            if (File.Exists(PlumeUpgradeTrigger)) File.Delete(PlumeUpgradeTrigger);
-
             Scene target = SceneManager.GetSceneByPath(MainScenePath);
             bool openedHere = !target.IsValid() || !target.isLoaded;
             if (openedHere) target = EditorSceneManager.OpenScene(MainScenePath, OpenSceneMode.Additive);
@@ -166,15 +154,19 @@ namespace GslvMission.EditorTools
                 var particles = target.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<ParticleSystem>(true)).ToArray();
                 Action<string, float, Color, Color, float, bool> apply = (name, size, hot, mid, strength, attached) =>
                 {
-                    var ps = particles.FirstOrDefault(p => p.name == name);
-                    if (ps == null) throw new Exception("plume object not found in Scene 1: " + name);
-                    ConfigureFlame(ps, size, hot, mid, strength, attached, material);
-                    EditorUtility.SetDirty(ps);
-                    EditorUtility.SetDirty(ps.GetComponent<ParticleSystemRenderer>());
+                    // "Flame L110" is two flames, "Flame L110 A" and "B", one per Vikas engine
+                    var found = particles.Where(p => p.name == name || p.name.StartsWith(name + " ")).ToArray();
+                    if (found.Length == 0) throw new Exception("plume object not found in Scene 1: " + name);
+                    foreach (var ps in found)
+                    {
+                        ConfigureFlame(ps, size, hot, mid, strength, attached, material);
+                        EditorUtility.SetDirty(ps);
+                        EditorUtility.SetDirty(ps.GetComponent<ParticleSystemRenderer>());
+                    }
                 };
                 apply("Flame S200 R", 2.0f, new Color(1f, 1f, 0.88f), new Color(1f, 0.48f, 0.055f), 1f, false);
                 apply("Flame S200 L", 2.0f, new Color(1f, 1f, 0.88f), new Color(1f, 0.48f, 0.055f), 1f, false);
-                apply("Flame L110", 2.2f, new Color(1f, 0.94f, 0.76f), new Color(1f, 0.30f, 0.035f), 0.82f, true);
+                apply("Flame L110", 2.0f, new Color(1f, 0.94f, 0.76f), new Color(1f, 0.30f, 0.035f), 0.82f, true);
                 apply("Flame C25", 1.7f, new Color(0.88f, 0.96f, 1f), new Color(0.28f, 0.46f, 1f), 0.72f, true);
 
                 EditorSceneManager.MarkSceneDirty(target);
@@ -671,6 +663,7 @@ namespace GslvMission.EditorTools
                     Undo.RecordObject(heavy.gameObject, UndoName);
                     heavy.gameObject.SetActive(true);
                 }
+            if (flightSat != null) MergeParts(flightSat);
             if (flightSat != null) Reg("Satellite Model", flightSat.gameObject);
             if (engine != null) Reg("C25 Engine Model", engine.gameObject);
 
@@ -711,6 +704,94 @@ namespace GslvMission.EditorTools
             Reg("Hologram", holo);
         }
 
+        // The user's satellite is 2,273 small meshes (panels, foil, bolts): a draw call each, for each eye, so the headset
+        // stutters whenever it is in view. Its parts are drawn as one mesh instead, one submesh per material, in "Merged Parts"
+        // under the satellite; the parts stay in the hierarchy, switched off. Nothing animates them on their own (the Timeline
+        // moves the satellite as a whole), so it looks and moves the same.
+        static void MergeParts(Transform root)
+        {
+            var old = root.Find(MergedName);
+            if (old != null) Undo.DestroyObjectImmediate(old.gameObject);
+            var groups = root.Cast<Transform>().ToList();
+            var parts = groups.SelectMany(g => g.GetComponentsInChildren<MeshRenderer>(true)
+                .Where(r => r.enabled && ShownWithin(r.transform, g) && r.GetComponent<MeshFilter>() != null && r.GetComponent<MeshFilter>().sharedMesh != null)).ToList();
+            if (parts.Count < 2) return;
+
+            var mats = new List<Material>();
+            var tris = new List<List<int>>();
+            var verts = new List<Vector3>(); var normals = new List<Vector3>(); var tangents = new List<Vector4>(); var uv = new List<Vector2>(); var colors = new List<Color>();
+            bool anyColor = parts.Any(r => r.GetComponent<MeshFilter>().sharedMesh.HasVertexAttribute(UnityEngine.Rendering.VertexAttribute.Color));
+            foreach (var r in parts)
+            {
+                var mesh = r.GetComponent<MeshFilter>().sharedMesh;
+                var m = root.worldToLocalMatrix * r.transform.localToWorldMatrix;
+                var nm = m.inverse.transpose;
+                bool mirrored = m.determinant < 0f;   // a mirrored part: its triangles turn the other way round
+                int start = verts.Count;
+                var v = mesh.vertices; var n = mesh.normals; var t = mesh.tangents; var u = mesh.uv; var c = mesh.colors;
+                for (int i = 0; i < v.Length; i++)
+                {
+                    verts.Add(m.MultiplyPoint3x4(v[i]));
+                    normals.Add(n.Length == v.Length ? nm.MultiplyVector(n[i]).normalized : Vector3.up);
+                    Vector3 tv = t.Length == v.Length ? m.MultiplyVector(t[i]).normalized : Vector3.right;
+                    tangents.Add(new Vector4(tv.x, tv.y, tv.z, (t.Length == v.Length ? t[i].w : 1f) * (mirrored ? -1f : 1f)));
+                    uv.Add(u.Length == v.Length ? u[i] : Vector2.zero);
+                    if (anyColor) colors.Add(c.Length == v.Length ? c[i] : Color.white);
+                }
+                var shared = r.sharedMaterials;
+                for (int s = 0; s < mesh.subMeshCount; s++)
+                {
+                    var mat = s < shared.Length ? shared[s] : shared.LastOrDefault();
+                    int k = mats.IndexOf(mat);
+                    if (k < 0) { mats.Add(mat); tris.Add(new List<int>()); k = mats.Count - 1; }
+                    var idx = mesh.GetTriangles(s);
+                    for (int i = 0; i + 2 < idx.Length; i += 3)
+                    {
+                        tris[k].Add(start + idx[i]);
+                        tris[k].Add(start + idx[mirrored ? i + 2 : i + 1]);
+                        tris[k].Add(start + idx[mirrored ? i + 1 : i + 2]);
+                    }
+                }
+            }
+            var merged = new Mesh { name = root.name + " (merged parts)" };
+            if (verts.Count > 65535) merged.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+            merged.SetVertices(verts);
+            merged.SetNormals(normals);
+            merged.SetTangents(tangents);
+            merged.SetUVs(0, uv);
+            if (anyColor) merged.SetColors(colors);
+            merged.subMeshCount = mats.Count;
+            for (int k = 0; k < mats.Count; k++) merged.SetTriangles(tris[k], k, false);
+            merged.RecalculateBounds();
+
+            EnsureFolder(MeshFolder);
+            string path = MeshFolder + "/" + root.name + " (merged parts).asset";
+            var asset = AssetDatabase.LoadAssetAtPath<Mesh>(path);
+            if (asset == null) { AssetDatabase.CreateAsset(merged, path); asset = merged; }
+            else { EditorUtility.CopySerialized(merged, asset); Object.DestroyImmediate(merged); }   // same asset, so its GUID stays
+
+            var go = NewObject(MergedName, root, typeof(MeshFilter), typeof(MeshRenderer));
+            go.layer = parts[0].gameObject.layer;
+            go.GetComponent<MeshFilter>().sharedMesh = asset;
+            var mr = go.GetComponent<MeshRenderer>();
+            mr.sharedMaterials = mats.ToArray();
+            mr.shadowCastingMode = parts[0].shadowCastingMode;
+            mr.receiveShadows = parts[0].receiveShadows;
+            mr.lightProbeUsage = parts[0].lightProbeUsage;
+            mr.reflectionProbeUsage = parts[0].reflectionProbeUsage;
+            foreach (var g in groups)
+                if (g.gameObject.activeSelf && g.GetComponentsInChildren<MeshRenderer>(true).Any(parts.Contains)) SetInactive(g.gameObject);
+            report.AppendLine(string.Format("{0}: {1} parts merged into one mesh ({2} materials, {3:N0} triangles)", root.name, parts.Count, mats.Count, tris.Sum(l => l.Count) / 3));
+        }
+
+        // t is switched on below root (root's own switch is not looked at)
+        static bool ShownWithin(Transform t, Transform root)
+        {
+            for (; t != null && t != root; t = t.parent)
+                if (!t.gameObject.activeSelf) return false;
+            return true;
+        }
+
         static void Fit(Transform t, float target)
         {
             var b = WorldBounds(t);
@@ -725,6 +806,52 @@ namespace GslvMission.EditorTools
             var b = rs[0].bounds;
             foreach (var r in rs) b.Encapsulate(r.bounds);
             return b;
+        }
+
+        // The mouths of a part's rocket nozzles, in world space: the rings of vertices along the bottom of its meshes, one
+        // ring per nozzle (the L110 core has two Vikas engines side by side). The bounds of a part are no guide: a booster's
+        // include its side strut, so their centre is off the nozzle, and the core's centre falls between its two nozzles.
+        struct Nozzle
+        {
+            public Vector3 exit;   // centre of the mouth
+            public float radius;
+        }
+
+        static List<Nozzle> NozzleExits(Transform part)
+        {
+            var pts = new List<Vector3>();
+            foreach (var mf in part.GetComponentsInChildren<MeshFilter>(false))
+            {
+                if (mf.sharedMesh == null) continue;
+                var m4 = mf.transform.localToWorldMatrix;
+                try { pts.AddRange(mf.sharedMesh.vertices.Select(v => m4.MultiplyPoint3x4(v))); }
+                catch (Exception) { }   // an unreadable mesh: fall back to the bounds below
+            }
+            if (pts.Count == 0)
+            {
+                var b = WorldBounds(part);
+                return new List<Nozzle> { new Nozzle { exit = new Vector3(b.center.x, b.min.y, b.center.z), radius = Mathf.Min(b.extents.x, b.extents.z) } };
+            }
+            float minY = pts.Min(p => p.y);
+            var lip = pts.Where(p => p.y <= minY + 0.05f).ToList();
+            // neighbours on one ring are a few centimetres apart; two nozzles' rings are half a metre apart
+            var group = Enumerable.Range(0, lip.Count).ToArray();
+            Func<int, int> root = null;
+            root = i => group[i] == i ? i : (group[i] = root(group[i]));
+            for (int i = 0; i < lip.Count; i++)
+                for (int j = i + 1; j < lip.Count; j++)
+                {
+                    var d = lip[i] - lip[j];
+                    if (d.x * d.x + d.z * d.z < 0.3f * 0.3f) group[root(i)] = root(j);
+                }
+            var rings = Enumerable.Range(0, lip.Count).GroupBy(root).Select(g =>
+            {
+                var ring = g.Select(i => lip[i]).ToList();
+                float x0 = ring.Min(p => p.x), x1 = ring.Max(p => p.x), z0 = ring.Min(p => p.z), z1 = ring.Max(p => p.z);
+                return new Nozzle { exit = new Vector3((x0 + x1) * 0.5f, minY, (z0 + z1) * 0.5f), radius = Mathf.Max(x1 - x0, z1 - z0) * 0.5f };
+            }).ToList();
+            float biggest = rings.Max(r => r.radius);
+            return rings.Where(r => r.radius >= biggest * 0.5f).OrderBy(r => r.exit.x).ThenBy(r => r.exit.z).ToList();   // stray vertices are not nozzles
         }
 
         // A GSLV model copy placed in space. longAxis: direction (in the parent's frame) the nose should point.
@@ -1435,7 +1562,7 @@ namespace GslvMission.EditorTools
             {
                 var fs = NewObject("HL Flight Satellite", FindUnder(effectsFolder, "Highlights"), typeof(PartHighlight));
                 var fh = fs.GetComponent<PartHighlight>();
-                fh.renderers = flightSat.GetComponentsInChildren<Renderer>(true);
+                fh.renderers = flightSat.GetComponentsInChildren<Renderer>(true).Where(r => ShownWithin(r.transform, flightSat)).ToArray();   // the merged mesh, not the parts
                 fh.sourceMaterials = fh.renderers.SelectMany(r => r.sharedMaterials).Where(m => m != null).Distinct().ToArray();
                 fh.glowMaterials = fh.sourceMaterials.Select(GlowCopy).ToArray();
                 fh.color = new Color(0.4f, 1f, 0.7f);
@@ -1509,12 +1636,20 @@ namespace GslvMission.EditorTools
             {
                 var part = FindPart(modelRoot, nz[1]);
                 if (part == null || part.GetComponentsInChildren<Renderer>().Length == 0) { warnings.Add("flame anchor '" + nz[1] + "' not found"); continue; }
-                var b = WorldBounds(part);   // the part's own mesh, or the meshes under it (the C25 engine is a group)
-                var at = new Vector3(b.center.x, b.min.y, b.center.z);
+                var exits = NozzleExits(part);   // the part's own mesh, or the meshes under it (the C25 engine is a group)
+                var at = exits[0].exit;
                 nozzleAt[nz[0]] = at;
                 // the L110 and C25 burn in space, where the rocket is fast: their flames move with the nozzle (local space),
                 // so they stay a flame on the engine instead of a long streak left behind
-                if (nz[0] == "Flame L110") Reg(nz[0], MakeFlame(nz[0], flames.transform, at, 2.2f, new Color(1f, 0.94f, 0.76f), new Color(1f, 0.30f, 0.035f), 0.82f, true));
+                if (nz[0] == "Flame L110")
+                {
+                    // two Vikas engines side by side: one flame from each, switched on and off together through the parent
+                    var pair = NewObject(nz[0], flames.transform);
+                    pair.transform.position = exits.Aggregate(Vector3.zero, (s, x) => s + x.exit) / exits.Count;
+                    for (int i = 0; i < exits.Count; i++)
+                        MakeFlame(nz[0] + " " + (char)('A' + i), pair.transform, exits[i].exit, 2.0f, new Color(1f, 0.94f, 0.76f), new Color(1f, 0.30f, 0.035f), 0.82f, true);
+                    Reg(nz[0], pair);
+                }
                 else if (nz[0] == "Flame C25") Reg(nz[0], MakeFlame(nz[0], flames.transform, at, 1.7f, new Color(0.88f, 0.96f, 1f), new Color(0.28f, 0.46f, 1f), 0.72f, true));
                 else Reg(nz[0], MakeFlame(nz[0], flames.transform, at, 2.0f, new Color(1f, 1f, 0.88f), new Color(1f, 0.48f, 0.055f), 1f));
             }
@@ -1712,11 +1847,15 @@ namespace GslvMission.EditorTools
             main.maxParticles = 64;
             var em = ps.emission;
             em.rateOverTime = 48f;
+            // The quad is drawn ahead of each particle (negative stretch, below), and its bright part starts about a sixth
+            // of the way along it, so the particles start that far up inside the bell and the fire begins at the nozzle mouth.
+            float birthLength = size * 0.6f * 0.9f * 3.2f + 20.5f * 0.16f;
             var sh = ps.shape;
             sh.shapeType = ParticleSystemShapeType.Cone;
             sh.angle = 3.2f;
             sh.radius = size * 0.13f;
             sh.radiusThickness = 0.75f;
+            sh.position = new Vector3(0f, 0f, -Mathf.Min(0.16f * birthLength, 1f));   // the cone emits along +z, which points down
             var col = ps.colorOverLifetime;
             col.enabled = true;
             var grad = new Gradient();
@@ -1725,13 +1864,15 @@ namespace GslvMission.EditorTools
             col.color = grad;
             var sz = ps.sizeOverLifetime;
             sz.enabled = true;
-            sz.size = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(new Keyframe(0f, 0.48f), new Keyframe(0.14f, 1f), new Keyframe(0.62f, 0.76f), new Keyframe(1f, 0.12f)));
+            sz.size = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(new Keyframe(0f, 0.9f), new Keyframe(0.2f, 1.1f), new Keyframe(0.62f, 0.85f), new Keyframe(1f, 0.15f)));   // full width at the mouth
 
             var renderer = ps.GetComponent<ParticleSystemRenderer>();
             renderer.sharedMaterial = material;
             renderer.renderMode = ParticleSystemRenderMode.Stretch;
-            renderer.lengthScale = 3.2f;
-            renderer.velocityScale = 0.16f;
+            // negative: the stretched quad reaches ahead of the particle, down and away from the engine; positive scales
+            // trail it back up, which drew the fire up the side of the booster instead of out of its nozzle
+            renderer.lengthScale = -3.2f;
+            renderer.velocityScale = -0.16f;
             renderer.cameraVelocityScale = 0f;
             renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             renderer.receiveShadows = false;
