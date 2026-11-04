@@ -439,7 +439,7 @@ namespace GslvSpace.EditorTools
         }
 
         /// <summary>Direction on the unit sphere mesh for a latitude/longitude in degrees.</summary>
-        static Vector3 GeoToSphere(float latitude, float longitude)
+        public static Vector3 GeoToSphere(float latitude, float longitude)
         {
             float lat = latitude * Mathf.Deg2Rad, lon = longitude * Mathf.Deg2Rad;
             return new Vector3(Mathf.Cos(lat) * Mathf.Sin(lon), Mathf.Sin(lat), -Mathf.Cos(lat) * Mathf.Cos(lon));

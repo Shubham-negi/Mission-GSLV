@@ -42,6 +42,7 @@ namespace GslvMission.EditorTools
         const string MergedName = "Merged Parts";
         const string ProbePath = "Assets/Assets A/Space/Models/Probe.FBX";
         const string ProbeTexPath = "Assets/Assets A/Space/Models/Probe.png";
+        const string HighlightShaderPath = Folder + "/Shaders/Part Highlight.shader";
         const string KitFolder = "Assets/Assets A/UI/GSLV UI Kit";   // sprites of the Mission GSLV UI sheets (drawn by Source~/MakeUiKit.ps1)
         const float SkinGlow = 16f;          // transparent glow margin around the kit's 9-slice skins, in canvas pixels
         const string UndoName = "Build Mission Timeline";
@@ -62,9 +63,28 @@ namespace GslvMission.EditorTools
         const double LaunchDuckFade = 1.5;   // s to fade down to the bed
         const double LaunchVoGap = 0.2;      // s between the end of the fade and the lift-off voice-over
 
-        // a part swells a little about its centre while the voice-over introduces it
-        const float EmphasisScale = 1.08f;
-        const double EmphasisRamp = 0.6;     // s to swell, and to settle back
+        // a part comes to the middle of the learner's view while the voice-over introduces it (Part Intro Motion)
+        const float PartIntroMove = 2.2f;    // s to come forward, and to go back
+        const float PartIntroAngle = 32f;    // degrees of the view a part fills on arrival: its whole body shows, clear above the captions
+        const float SatelliteIntroDistance = 12f;   // m: the satellite is small, so it also grows on its way to here
+
+        // the atmosphere readouts beside the rocket during the climb (bearings: degrees right of the learner's forward)
+        const float ReadoutDistance = 12f;       // m, further out than the other UI, like the satellite introduction's panels
+        const float ReadoutScale = 1.15f;        // and a little larger, so their smallest text still reads in the headset from there
+        const float LayerPanelY = 1.75f, TelemetryY = -0.08f;   // height of the panels' centres, with a clear gap between them
+        const float ReadoutGap = 3f;             // degrees of clear sky between the panels and the rocket
+        const float ReadoutMinBearing = -21f;    // the panels' centre: further left, they reach the edge of the headset's view
+        const float ReadoutMaxBearing = -4f;     // further right, they fill the middle of the view
+        const float ReadoutRestBearing = -28f;   // the altitude readout in Scene 5, clear of the Deploy button
+
+        // the satellite introduction (Scene 1): the hologram and its panel on the left, two panels on the right, the rocket between them
+        const float IntroBearing = 25f;          // degrees either side of the learner's forward, to the middle of the panels; their inner edges stay clear of the launch tower's arms
+        const float IntroDistance = 12f;         // m, further out than the other UI: the rocket stays the biggest thing in view
+        const float IntroCentreY = 0.5f;         // m above eye level, to the middle of the left panel; the right two line up with its top and bottom edges
+        const float HologramSpan = 3.6f;         // m across the wings, about 85% of its panel's width from the learner
+        const float HologramDistance = 11f;      // m: just in front of its panel, and it turns around the line of its wings, so it never reaches the panel
+        const float HologramLift = 1.15f;        // m above eye level: in the upper half of its panel, above Earth's edge
+        const float HologramStartTurn = -20f;    // degrees: tips over to face the learner as its panel comes in
 
         // the fairing turns see-through while the voice-over shows the satellite inside it
         const float FairingMinOpacity = 0.2f;
@@ -74,6 +94,12 @@ namespace GslvMission.EditorTools
         const float MapStageLength = 0.5f;
         const float MapSatelliteSize = 0.6f;
         const float SpaceScale = 5f;         // orbit map enlarged around the learner's viewpoint, so everything stays beyond the UI
+        // Where the journey on the orbit map starts: the real launch site, Sriharikota, on India's
+        // east coast.
+        const float JourneyLatitude = 13.72f;
+        const float JourneyLongitude = 80.23f;
+        const string JourneyLabel = "SRIHARIKOTA";
+        const float MiniRocketLength = 0.65f;   // in the map's units, where Earth's radius is 2.2
         const float BackdropRadius = 600f;  // Earth below the rocket during the flight in space
 
         static readonly Color Cyan = new Color(0.30f, 0.88f, 1f, 1f);
@@ -94,6 +120,7 @@ namespace GslvMission.EditorTools
         static Transform rig, dollyHost, dolly, uiAnchor, effectsFolder, modelsFolder, spaceFolder;
         static Transform modelRoot, padHost, padLift, earthSystem, flightPath, fp1, fp2, fp3, gto, deployPoint, slot, satellite;
         static Transform spaceCamHost, spaceCam, flightSat, backdrop;
+        static JourneyIndicator journey;
 
         // Timeline times of the flight's events, set while the storyboard is laid out.
         class Flight
@@ -106,6 +133,7 @@ namespace GslvMission.EditorTools
         static SpaceEnvironmentSwitcher switcher;
         static MissionFlow flow;
         static QuizPanel quiz;
+        static FlightReadouts readouts;
         static PlayableDirector dir;
         static TimelineAsset tl;
         static AudioTrack voTrack;
@@ -282,12 +310,14 @@ namespace GslvMission.EditorTools
             EnsureFolder(AnimFolder);
             EnsureFolder(MatFolder);
             EnsureFolder(TexFolder);
+            LiftOutFlames();
             if (rebuild) Cleanup();
 
             Reorganize();
             PrepareAssets();
             BuildModels();
             BuildSpaceAdditions();
+            BuildJourney();
             BuildFlightBackdrop();
             BuildAudio();
             BuildDirector();
@@ -309,14 +339,68 @@ namespace GslvMission.EditorTools
                 var f = FindRoot(n);
                 if (f != null) Undo.DestroyObjectImmediate(f.gameObject);
             }
-            foreach (string n in new[] { "Ascent Rocket", "Showcase Rocket", "GTO Glow", "Upper Stage (Deploy)", "Satellite Hologram", "Engine Flames", "Launch Smoke", "Space Camera Host", "Flight Backdrop", "Sky Atmosphere", "Cloud Layer" })
+            foreach (string n in new[] { "Ascent Rocket", "Showcase Rocket", "GTO Glow", "Upper Stage (Deploy)", "Satellite Hologram", "Journey Indicator", "Engine Flames", "Launch Smoke", "Space Camera Host", "Flight Backdrop", "Sky Atmosphere", "Cloud Layer" })
             {
-                var t = FindT(n);
-                if (t != null) Undo.DestroyObjectImmediate(t.gameObject);
+                // every copy, in case an earlier build left one behind
+                for (var t = FindT(n); t != null; t = FindT(n)) Undo.DestroyObjectImmediate(t.gameObject);
             }
             AssetDatabase.DeleteAsset(TimelinePath);
             AssetDatabase.DeleteAsset(MatFolder + "/Hologram.mat");
             foreach (string g in AssetDatabase.FindAssets("t:AnimationClip", new[] { AnimFolder })) AssetDatabase.DeleteAsset(AssetDatabase.GUIDToAssetPath(g));
+        }
+
+        // ---------------------------------------------------------------- engine flames placed by hand
+        // The user places the engine flames in the scene, so a build never moves or remakes one that is already there: position,
+        // rotation, scale, parent and particle settings all stay. They are lifted out before anything is deleted, because the steps
+        // before BuildEffects read the rocket's renderers (materials, highlights) and must not take a flame for part of the rocket,
+        // and go back in BuildEffects. A flame is found by its name; delete one from the scene and the next build makes it afresh
+        // on its nozzle.
+        static readonly string[] HandPlacedFlames = { "Flame S200 R", "Flame S200 L", "Flame L110", "Flame C25", "Intro Flame S200 R", "Intro Flame S200 L" };
+
+        class KeptFlame
+        {
+            public string name;
+            public Transform flame, parent;
+            public Vector3 position, scale;
+            public Quaternion rotation;
+        }
+
+        static readonly List<KeptFlame> keptFlames = new List<KeptFlame>();
+        static Transform keptFlamesHolder;
+
+        static void LiftOutFlames()
+        {
+            keptFlames.Clear();
+            keptFlamesHolder = null;
+            foreach (string n in HandPlacedFlames)
+            {
+                var t = FindT(n);
+                if (t != null) keptFlames.Add(new KeptFlame { name = n, flame = t, parent = t.parent, position = t.localPosition, rotation = t.localRotation, scale = t.localScale });
+            }
+            if (keptFlames.Count == 0) return;
+            keptFlamesHolder = NewObject("Flames Kept During Build", null).transform;
+            foreach (var k in keptFlames) Undo.SetTransformParent(k.flame, keptFlamesHolder, UndoName);
+        }
+
+        static bool IsKeptFlame(string name)
+        {
+            return keptFlames.Any(k => k.name == name);
+        }
+
+        static void PutBackFlames(Transform engineFlames)
+        {
+            foreach (var k in keptFlames)
+            {
+                // the launch flames' parent, "Engine Flames", was made afresh in the same place, so they go under the new one
+                Undo.SetTransformParent(k.flame, k.parent != null ? k.parent : engineFlames, UndoName);
+                Undo.RecordObject(k.flame, UndoName);
+                k.flame.localPosition = k.position;
+                k.flame.localRotation = k.rotation;
+                k.flame.localScale = k.scale;
+                Reg(k.name, k.flame.gameObject);
+            }
+            if (keptFlamesHolder != null) Undo.DestroyObjectImmediate(keptFlamesHolder.gameObject);
+            if (keptFlames.Count > 0) report.AppendLine("Engine flames kept as placed in the scene: " + string.Join(", ", keptFlames.Select(k => k.name)));
         }
 
         // ---------------------------------------------------------------- hierarchy folders
@@ -514,7 +598,18 @@ namespace GslvMission.EditorTools
                         tex.SetPixel(px, py, new Color(brightness, brightness, brightness, alpha));
                     }
 
-            File.WriteAllBytes(path, tex.EncodeToPNG());
+            // Only written when it has changed, and a failed write keeps the one already there: Windows refuses to overwrite a file
+            // that something has open (error 1224), and by this point a rebuild has already deleted the old Timeline.
+            byte[] png = tex.EncodeToPNG();
+            if (!File.Exists(path) || !File.ReadAllBytes(path).SequenceEqual(png))
+            {
+                try { File.WriteAllBytes(path, png); }
+                catch (IOException e)
+                {
+                    if (!File.Exists(path)) throw;
+                    warnings.Add("could not update " + path + " (" + e.Message + "); kept the one already there");
+                }
+            }
             Object.DestroyImmediate(tex);
             AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
             var imp = (TextureImporter)AssetImporter.GetAtPath(path);
@@ -607,19 +702,27 @@ namespace GslvMission.EditorTools
             return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
         }
 
-        // Emissive copy of a material (emission map = its albedo), used by PartHighlight.
+        // Copy of a material on the Part Highlight shader (same textures, glow and Fresnel rim), used by PartHighlight.
         static Material GlowCopy(Material source)
         {
             string path = MatFolder + "/" + source.name + " (Glow).mat";
-            var existing = AssetDatabase.LoadAssetAtPath<Material>(path);
-            if (existing != null) return existing;
-            var m = new Material(source) { name = source.name + " (Glow)" };
-            m.EnableKeyword("_EMISSION");
-            m.SetColor("_EmissionColor", Color.white);
-            var main = source.HasProperty("_MainTex") ? source.GetTexture("_MainTex") : null;
-            if (main != null) m.SetTexture("_EmissionMap", main);
-            m.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
-            AssetDatabase.CreateAsset(m, path);
+            var m = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (m == null)
+            {
+                m = new Material(source) { name = source.name + " (Glow)" };
+                AssetDatabase.CreateAsset(m, path);
+            }
+            var shader = AssetDatabase.LoadAssetAtPath<Shader>(HighlightShaderPath);
+            if (shader == null)
+            {
+                AssetDatabase.ImportAsset(HighlightShaderPath, ImportAssetOptions.ForceSynchronousImport);
+                shader = AssetDatabase.LoadAssetAtPath<Shader>(HighlightShaderPath);
+            }
+            if (shader == null) throw new Exception("The highlight shader is missing: " + HighlightShaderPath);
+            m.shader = shader;
+            m.DisableKeyword("_EMISSION");
+            m.globalIlluminationFlags = MaterialGlobalIlluminationFlags.EmissiveIsBlack;
+            EditorUtility.SetDirty(m);
             return m;
         }
 
@@ -681,12 +784,13 @@ namespace GslvMission.EditorTools
             sourceMats = modelRoot.GetComponentsInChildren<Renderer>(true).SelectMany(r => r.sharedMaterials).Where(m => m != null).Distinct().ToArray();
             glowMats = sourceMats.Select(GlowCopy).ToArray();
 
-            // Satellite hologram beside the learner (Scene 1).
+            // Satellite hologram beside the learner (Scene 1), wings out to the sides, on an object of its own that does the spinning.
+            var holoRoot = NewObject("Satellite Hologram", modelsFolder).transform;
             var probe = AssetDatabase.LoadAssetAtPath<GameObject>(ProbePath);
             var holo = (GameObject)PrefabUtility.InstantiatePrefab(probe);
             Undo.RegisterCreatedObjectUndo(holo, UndoName);
-            holo.name = "Satellite Hologram";
-            holo.transform.SetParent(modelsFolder, false);
+            holo.name = "Probe Model";
+            holo.transform.SetParent(holoRoot, false);
             foreach (Transform t in holo.GetComponentsInChildren<Transform>(true))
                 if (t.name.IndexOf("fold", StringComparison.OrdinalIgnoreCase) >= 0) t.gameObject.SetActive(false);
             foreach (var r in holo.GetComponentsInChildren<Renderer>(true))
@@ -697,17 +801,20 @@ namespace GslvMission.EditorTools
                 for (int i = 0; i < mats.Length; i++) mats[i] = hologramMat;
                 r.sharedMaterials = mats;
             }
-            Fit(holo.transform, 2.0f);
-            // park it where the learner sees it: left of the rocket, ahead and slightly below eye level
-            float yaw = rig.eulerAngles.y;
-            Vector3 fwd = Quaternion.Euler(0f, yaw, 0f) * Vector3.forward;
-            Vector3 pos = rig.position + Quaternion.Euler(0f, yaw - 18f, 0f) * Vector3.forward * 4.5f + Vector3.down * 0.5f;
-            holo.transform.position = pos;
-            holo.transform.rotation = Quaternion.Euler(0f, yaw + 180f, 0f);
-            Undo.AddComponent<SlowSpin>(holo);
-            var spin = holo.GetComponent<SlowSpin>();
+            Fit(holo.transform, HologramSpan);
+            // park it where the learner sees it: left of the rocket, ahead, in front of its panel. The model's wings run along its X axis and
+            // lie flat in its XZ plane, so a quarter turn around X shows their faces with the nose up. It spins around that same line,
+            // so the wings stay out to the left and right the whole time.
+            Vector3 toHolo = Quaternion.Euler(0f, rig.eulerAngles.y - IntroBearing, 0f) * Vector3.forward;
+            holoRoot.position = rig.position + toHolo * HologramDistance + Vector3.up * HologramLift;
+            holoRoot.rotation = Quaternion.LookRotation(-toHolo, Vector3.up);
+            holo.transform.localRotation = Quaternion.Euler(-90f, 0f, 0f);
+            holo.transform.position += holoRoot.position - WorldBounds(holo.transform).center;
+            holoRoot.rotation *= Quaternion.Euler(HologramStartTurn, 0f, 0f);
+            var spin = holoRoot.gameObject.AddComponent<SlowSpin>();
             spin.speed = 25f;
-            Reg("Hologram", holo);
+            spin.localAxis = Vector3.right;
+            Reg("Hologram", holoRoot.gameObject);
         }
 
         // The user's satellite is 2,273 small meshes (panels, foil, bolts): a draw call each, for each eye, so the headset
@@ -805,9 +912,10 @@ namespace GslvMission.EditorTools
             if (max > 0.0001f) t.localScale *= target / max;
         }
 
+        // The meshes only: a part's flames are not part of its size.
         static Bounds WorldBounds(Transform t)
         {
-            var rs = t.GetComponentsInChildren<Renderer>(false);
+            var rs = t.GetComponentsInChildren<Renderer>(false).Where(r => !(r is ParticleSystemRenderer)).ToArray();
             if (rs.Length == 0) return new Bounds(t.position, Vector3.zero);
             var b = rs[0].bounds;
             foreach (var r in rs) b.Encapsulate(r.bounds);
@@ -1021,6 +1129,147 @@ namespace GslvMission.EditorTools
             mc.spaceAnchor = spaceCam;
         }
 
+        // The journey on the orbit map: the Flight Path line, now starting from the middle of India, and under it what JourneyIndicator
+        // moves along it. The small rocket is the real model in gold without its heavy engine mesh, so it reads as the same rocket.
+        static void BuildJourney()
+        {
+            journey = null;
+            var bezier = flightPath.GetComponent<BezierPath>();
+            var line = flightPath.GetComponent<LineRenderer>();
+            var gtoLine = gto.GetComponent<LineRenderer>();
+            var earth = earthSystem.Find("Earth");
+            if (bezier == null || !bezier.IsValid || line == null || gtoLine == null || earth == null)
+            {
+                warnings.Add("the flight path is incomplete, so the orbit map has no journey");
+                return;
+            }
+            float unit = earthSystem.lossyScale.x;
+            Vector3 eye = switcher.transform.position;
+            Color warm = new Color(1f, 0.82f, 0.4f);
+
+            // Starts just above the clouds (they are at 1.012 of Earth's radius) and rises on the learner's view before it curves over
+            // to join the transfer orbit where it already did, so it never looks as if it came out of the Earth.
+            Quaternion layout;
+            GslvSpace.EditorTools.SpaceEnvironmentBuilder.UnitySphere(out layout);
+            Vector3 start = earth.TransformPoint(layout * GslvSpace.EditorTools.SpaceEnvironmentBuilder.GeoToSphere(JourneyLatitude, JourneyLongitude) * (0.5f * 1.022f));
+            Vector3 outwards = (start - earthSystem.position).normalized;
+            Undo.RecordObject(bezier.p0, UndoName);
+            Undo.RecordObject(bezier.p1, UndoName);
+            bezier.p0.position = start;
+            bezier.p1.position = start + (outwards * 0.36f + earthSystem.up * 0.3f + earthSystem.right * 0.05f) * unit;
+
+            // Thinner and paler than the transfer orbit's line, so the two can't be mistaken for each other.
+            Undo.RecordObject(line, UndoName);
+            line.widthMultiplier = gtoLine.widthMultiplier * 0.7f;
+            line.colorGradient = LineColours(new Color(0.42f, 0.66f, 1f), new Color(0.42f, 0.66f, 1f), 0.6f);
+            Undo.RecordObject(bezier, UndoName);
+            bezier.Rebuild();
+            float lowest = Enumerable.Range(0, 65).Min(i => (bezier.GetPoint(i / 64f) - earthSystem.position).magnitude) / unit;
+            report.AppendLine(string.Format("Journey: from latitude {0}, longitude {1}; lowest point of the path {2:0.00} map units from Earth's centre (surface 2.20, clouds 2.23)", JourneyLatitude, JourneyLongitude, lowest));
+            if (lowest < 2.23f) warnings.Add("the flight path dips into the clouds or the Earth");
+
+            var root = NewObject("Journey Indicator", flightPath, typeof(JourneyIndicator));
+            journey = root.GetComponent<JourneyIndicator>();
+
+            var lit = NewObject("Journey Lit Line", root.transform, typeof(LineRenderer)).GetComponent<LineRenderer>();
+            lit.sharedMaterial = line.sharedMaterial;
+            lit.useWorldSpace = false;
+            lit.alignment = LineAlignment.View;
+            lit.textureMode = LineTextureMode.Stretch;
+            lit.numCapVertices = 2;
+            lit.widthMultiplier = gtoLine.widthMultiplier;
+            lit.colorGradient = LineColours(new Color(1f, 0.42f, 0.06f), new Color(1f, 0.66f, 0.14f), 0.85f);   // additive over bright land, so deeper than it looks
+            lit.positionCount = 0;
+            lit.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            lit.receiveShadows = false;
+
+            // the map's own amber dot marks the start
+            var faces = new List<Transform>();
+            var marker = FindUnder(fp1, "Marker");
+            Func<string, Transform, float, Transform> dot = (name, parent, size) =>
+            {
+                var c = Object.Instantiate(marker.gameObject, parent);
+                Undo.RegisterCreatedObjectUndo(c, UndoName);
+                c.name = name;
+                c.SetActive(true);
+                c.transform.localPosition = Vector3.zero;
+                c.transform.localRotation = Quaternion.identity;
+                c.transform.localScale = Vector3.one * size;
+                return c.transform;
+            };
+            if (marker != null)
+            {
+                var origin = dot("Journey Origin", root.transform, 0.3f);
+                origin.position = start;
+                faces.Add(origin);
+            }
+
+            var mini = NewObject("Mini Rocket", root.transform).transform;
+            mini.position = start;
+            var model = SpaceRocket("Mini Rocket Model", mini, Vector3.up, MiniRocketLength, 0f);
+            foreach (var mf in model.GetComponentsInChildren<MeshFilter>(true))
+                if (mf.sharedMesh != null && mf.sharedMesh.triangles.Length / 3 > 10000) mf.gameObject.SetActive(false);
+            var gold = LoadOrMakeMaterial("Mini Rocket", "GSLV/Part Highlight", m => { });
+            gold.SetColor("_Color", new Color(0.95f, 0.62f, 0.22f));
+            gold.SetColor("_EmissionColor", new Color(0.38f, 0.22f, 0.05f));
+            gold.SetColor("_RimColor", new Color(1f, 0.82f, 0.42f));
+            gold.SetFloat("_RimPower", 1.6f);
+            gold.SetFloat("_Glossiness", 0.3f);
+            EditorUtility.SetDirty(gold);
+            foreach (var r in model.GetComponentsInChildren<Renderer>(true))
+                r.sharedMaterials = Enumerable.Repeat(gold, r.sharedMaterials.Length).ToArray();
+            Bounds miniBounds = WorldBounds(model.transform);
+            model.transform.position += mini.position - miniBounds.center;
+            report.AppendLine("Journey: small rocket has " + model.GetComponentsInChildren<MeshFilter>(false).Sum(f => f.sharedMesh != null ? f.sharedMesh.triangles.Length / 3 : 0) + " triangles");
+
+            // the arrows and the arrival ring are additive, like the lines
+            Func<string, string, SpriteRenderer> sprite = (name, kit) =>
+            {
+                var s = NewObject(name, root.transform, typeof(SpriteRenderer)).GetComponent<SpriteRenderer>();
+                s.sprite = Kit(kit);
+                s.sharedMaterial = line.sharedMaterial;
+                s.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                s.receiveShadows = false;
+                s.enabled = false;
+                return s;
+            };
+            var arrows = Enumerable.Range(1, 3).Select(i => sprite("Journey Arrow " + i, "Icon_Chevron")).ToArray();
+            var ring = sprite("Journey Arrival Ring", "Ring_Glow");
+
+            // named like the transfer orbit, so the learner reads where the journey starts as easily
+            var gtoLabel = gto.Find("Label");
+            if (gtoLabel != null)
+            {
+                var label = Object.Instantiate(gtoLabel.gameObject, root.transform);
+                Undo.RegisterCreatedObjectUndo(label, UndoName);
+                label.name = "Journey Label";
+                label.SetActive(true);
+                var text = label.GetComponent<TMP_Text>();
+                text.text = JourneyLabel;
+                text.color = warm;
+                label.transform.localScale = gtoLabel.localScale * 0.62f;
+                label.transform.position = start + (earthSystem.right * 0.62f - earthSystem.up * 0.1f) * unit;   // over the Bay of Bengal, off the east coast, clear of the path that rises above it
+                label.transform.rotation = Quaternion.LookRotation(label.transform.position - eye, earthSystem.up);
+                faces.Add(label.transform);
+            }
+
+            journey.path = bezier;
+            journey.viewpoint = rig;
+            journey.rocket = mini;
+            journey.rocketLead = 0.5f * MiniRocketLength * unit;
+            journey.litLine = lit;
+            journey.arrows = arrows;
+            journey.arrivalRing = ring;
+            journey.faceViewer = faces.ToArray();
+        }
+
+        static Gradient LineColours(Color start, Color end, float alpha)
+        {
+            var g = new Gradient();
+            g.SetKeys(new[] { new GradientColorKey(start, 0f), new GradientColorKey(end, 1f) }, new[] { new GradientAlphaKey(alpha, 0f), new GradientAlphaKey(alpha, 1f) });
+            return g;
+        }
+
         // Enlarges the space set around the learner's viewpoint (so the view from there is unchanged) to give the camera
         // room to fly beside the rocket while everything stays farther away than the UI. Safe to run again.
         static void ScaleSpaceSet()
@@ -1164,7 +1413,6 @@ namespace GslvMission.EditorTools
 
             // ----- captions (the storyboard's ON-SCREEN lines)
             Caption("Cap GSLV", "GSLV — GEOSYNCHRONOUS SATELLITE LAUNCH VEHICLE", 0f, -2.4f, 54f);
-            Caption("Cap Objective", "MISSION OBJECTIVE — EXPLORE GSLV AND LAUNCH A SATELLITE", 0f, -2.4f, 50f);
             Caption("Cap Explore", "EXPLORE THE GSLV", 0f, -1.35f, 56f, 760f, null, "Icon_Book");   // low, below the rocket, a clear gap above the Explore button
             Caption("Cap S200", "S200 — SOLID ROCKET BOOSTERS", 0f, -2.4f, 54f);
             Caption("Cap L110", "L110 — LIQUID STAGE", 0f, -2.4f, 54f);
@@ -1193,6 +1441,9 @@ namespace GslvMission.EditorTools
             ButtonCanvas("Explore", "EXPLORE", 0f, -2.4f, new Vector2(620f, 170f), "Blue", "Icon_Book");   // on the bottom caption line
             ButtonCanvas("Deploy", "DEPLOY SATELLITE", SideBearing, 0.3f, new Vector2(880f, 170f), "Orange", "Icon_Satellite");
 
+            // ----- the satellite introduction (Scene 1)
+            BuildSatelliteIntroPanels();
+
             // ----- mission readiness panel (Scene 3), with its LAUNCH button
             BuildReadinessPanel();
 
@@ -1201,13 +1452,14 @@ namespace GslvMission.EditorTools
             BuildAchievements();
             BuildEndMenu();
 
-            // ----- the atmosphere's layers and a live altitude / speed readout, on the left during the climb
+            // ----- the atmosphere's layers and a live altitude / speed readout, beside the rocket during the climb
             BuildAtmosphereReadouts();
         }
 
         static void BuildAtmosphereReadouts()
         {
-            float bearing = -(SideBearing + 4f);
+            readouts = NewObject("Flight Readouts", uiAnchor, typeof(FlightReadouts)).GetComponent<FlightReadouts>();   // turned as one group, by the Timeline's time
+            readouts.director = dir;
             string[,] layers =
             {
                 { "TROPOSPHERE", "0 - 12 km  |  clouds and weather" },
@@ -1218,7 +1470,9 @@ namespace GslvMission.EditorTools
             for (int i = 0; i < layers.GetLength(0); i++)
             {
                 string key = "Cap Layer " + (i + 1);
-                var c = CanvasObject(key, bearing, UiDistance, 1.35f, new Vector2(900f, 190f));
+                var c = CanvasObject(key, 0f, ReadoutDistance, LayerPanelY, new Vector2(900f, 190f));
+                c.transform.localScale *= ReadoutScale;
+                c.transform.SetParent(readouts.transform, false);
                 Img("Background", c.transform, "Panel", new Vector2(900f, 190f), Vector2.zero);
                 Img("Icon", c.transform, "Icon_Layers", new Vector2(64f, 64f), new Vector2(-370f, 38f), Cyan);
                 Text(c.transform, layers[i, 0], 54f, Cyan, new Vector2(860f, 80f), new Vector2(0f, 38f)).characterSpacing = 4f;
@@ -1226,7 +1480,9 @@ namespace GslvMission.EditorTools
                 Text(c.transform, layers[i, 1], 30f, White, new Vector2(860f, 60f), new Vector2(0f, -42f), TextAlignmentOptions.Center, FontStyles.Normal);
                 Reg(key, c);
             }
-            var tele = CanvasObject("Telemetry", bearing, UiDistance, -0.05f, new Vector2(620f, 170f));   // a clear gap below the layer panel
+            var tele = CanvasObject("Telemetry", 0f, ReadoutDistance, TelemetryY, new Vector2(620f, 170f));
+            tele.transform.localScale *= ReadoutScale;
+            tele.transform.SetParent(readouts.transform, false);
             Img("Background", tele.transform, "Panel", new Vector2(620f, 170f), Vector2.zero);
             Img("Icon", tele.transform, "Icon_Gauge", new Vector2(86f, 86f), new Vector2(-235f, 0f), Cyan);
             var readout = Text(tele.transform, "", 40f, White, new Vector2(440f, 150f), new Vector2(50f, 0f), TextAlignmentOptions.MidlineLeft, FontStyles.Normal);
@@ -1432,6 +1688,71 @@ namespace GslvMission.EditorTools
             Reg("Btn " + id, btn.gameObject);
         }
 
+        // A panel of the satellite introduction: its own canvas, a skin, a border that can light up, and PanelReveal to bring it in.
+        static PanelReveal IntroPanel(string key, float bearing, float y, Vector2 size, string skin, Color border, Vector3 slideFrom)
+        {
+            var go = CanvasObject(key, bearing, IntroDistance, y, size);
+            go.AddComponent<CanvasGroup>().interactable = false;
+            var reveal = go.AddComponent<PanelReveal>();
+            reveal.director = dir;
+            reveal.slide = slideFrom;
+            Img("Background", go.transform, skin, size, Vector2.zero);
+            reveal.borderLight = Img("Border Light", go.transform, "Panel_Edge", size, Vector2.zero, border);
+            Reg(key, go);
+            return reveal;
+        }
+
+        // An icon or group the panel brings in on its own, 'delay' seconds after the panel's start.
+        static PanelReveal.Item IntroItem(Component target, float delay)
+        {
+            return new PanelReveal.Item { target = (RectTransform)target.transform, group = target.gameObject.AddComponent<CanvasGroup>(), delay = delay };
+        }
+
+        static void BuildSatelliteIntroPanels()
+        {
+            // ---- the hologram floats in the upper half of this one, above Earth's edge and what satellites are used for
+            var sizeA = new Vector2(900f, 700f);
+            var applications = IntroPanel("Intro Applications", -IntroBearing, IntroCentreY, sizeA, "Panel_Glass", new Color(0.66f, 0.92f, 1f), new Vector3(-0.3f, 0f, 0f));
+            Img("Earth Limb", applications.transform, "Earth_Limb", new Vector2(870f, 306f), new Vector2(0f, -155f), new Color(0.4f, 0.78f, 1f, 0.85f));
+            string[] labels = { "TELEVISION\nBROADCASTING", "COMMUNICATION", "WEATHER\nMONITORING" };
+            string[] icons = { "Icon_TV", "Icon_Signal", "Icon_Weather" };
+            float[] delays = { 1f, 2.4f, 3.4f };   // about when the voice-over gets to each, in S1_02
+            applications.items = new PanelReveal.Item[3];
+            for (int i = 0; i < 3; i++)
+            {
+                var app = NewObject("Application " + (i + 1), applications.transform, typeof(RectTransform));
+                ((RectTransform)app.transform).anchoredPosition = new Vector2((i - 1) * 290f, -210f);
+                Img("Icon Tile", app.transform, "IconTile_Blue", Vector2.one * 130f, new Vector2(0f, 49f));
+                Img("Icon", app.transform, icons[i], Vector2.one * 72f, new Vector2(0f, 49f));
+                var label = Text(app.transform, labels[i], 31f, White, new Vector2(276f, 84f), new Vector2(0f, -68f));
+                label.enableWordWrapping = false;
+                label.characterSpacing = -1f;   // BROADCASTING and COMMUNICATION sit side by side: a clear gap between them
+                applications.items[i] = IntroItem(app.transform, delays[i]);
+            }
+
+            // ---- what a satellite is
+            var sizeB = new Vector2(900f, 370f);
+            var info = IntroPanel("Intro Satellite", IntroBearing, IntroCentreY + (sizeA.y - sizeB.y) * 0.5f * Px, sizeB, "Panel", new Color(0.66f, 0.92f, 1f), new Vector3(0.3f, 0f, 0f));
+            var title = Text(info.transform, "SATELLITE", 64f, White, new Vector2(820f, 76f), new Vector2(0f, 124f), TextAlignmentOptions.MidlineLeft);
+            title.characterSpacing = 2f;
+            OneLine(Text(info.transform, "A SPACECRAFT THAT ORBITS EARTH", 34f, new Color(0.6f, 0.88f, 1f, 1f), new Vector2(820f, 44f), new Vector2(0f, 68f), TextAlignmentOptions.MidlineLeft));
+            Img("Line", info.transform, "Divider", new Vector2(820f, 12f), new Vector2(0f, 40f));
+            Text(info.transform, "Satellites relay signals, track the weather and study Earth from space. To get there, each one needs a powerful rocket.",
+                38f, White, new Vector2(820f, 170f), new Vector2(0f, -50f), TextAlignmentOptions.TopLeft, FontStyles.Normal);
+
+            // ---- the mission objective, with a satellite on its way round Earth
+            var sizeC = new Vector2(900f, 300f);
+            var objective = IntroPanel("Intro Objective", IntroBearing, IntroCentreY - (sizeA.y - sizeC.y) * 0.5f * Px, sizeC, "Panel_Gold", new Color(1f, 0.85f, 0.45f), new Vector3(0.3f, 0f, 0f));
+            var heading = Text(objective.transform, "MISSION OBJECTIVE", 44f, Gold, new Vector2(820f, 60f), new Vector2(0f, 102f), TextAlignmentOptions.MidlineLeft);
+            heading.characterSpacing = 3f;
+            OneLine(heading);
+            var earth = Img("Earth", objective.transform, "Earth_Globe", Vector2.one * 210f, new Vector2(325f, -15f));
+            var arrow = Img("Arrow", objective.transform, "Arc_Arrow", new Vector2(340f, 120f), new Vector2(-40f, 24f), Gold);
+            var satellite = Img("Satellite", objective.transform, "Icon_Satellite", Vector2.one * 88f, new Vector2(-300f, 20f));
+            Text(objective.transform, "EXPLORE GSLV AND\nLAUNCH A SATELLITE", 36f, White, new Vector2(600f, 90f), new Vector2(-110f, -88f), TextAlignmentOptions.MidlineLeft);
+            objective.items = new[] { IntroItem(satellite, 0.2f), IntroItem(arrow, 0.5f), IntroItem(earth, 0.8f) };
+        }
+
         static void BuildReadinessPanel()
         {
             var panel = CanvasObject("Readiness Panel", 0f, UiDistance - 0.4f, 0.7f, new Vector2(720f, 740f));   // centred in front of the learner
@@ -1536,7 +1857,8 @@ namespace GslvMission.EditorTools
         }
 
         // ---------------------------------------------------------------- highlights
-        static GameObject Highlight(string key, Transform root, Color color, params string[] partNames)
+        // The warm highlight: PartHighlight's own colours.
+        static GameObject Highlight(string key, Transform root, params string[] partNames)
         {
             var go = NewObject(key, FindUnder(effectsFolder, "Highlights") ?? NewObject("Highlights", effectsFolder).transform, typeof(PartHighlight));
             var h = go.GetComponent<PartHighlight>();
@@ -1550,13 +1872,21 @@ namespace GslvMission.EditorTools
             h.renderers = rs.Distinct().ToArray();
             h.sourceMaterials = sourceMats;
             h.glowMaterials = glowMats;
-            h.color = color;
             return Reg(key, go);
+        }
+
+        // The satellite keeps its own green glow on its own colours.
+        static void SatelliteGlow(PartHighlight h)
+        {
+            h.color = h.accentColor = new Color(0.4f, 1f, 0.7f);
+            h.surfaceTint = Color.white;
+            h.minIntensity = 0.45f;
+            h.maxIntensity = 1.5f;
+            h.rimColor = new Color(0.45f, 1f, 0.75f);
         }
 
         static void BuildHighlights()
         {
-            var cy = new Color(0.15f, 0.85f, 1f);
             var all = new[] { "Louncher.001", "Louncher.002", "Louncher.003", "Louncher.004", "Louncher.005", "Louncher.006", "Louncher.009", "J_2S_J_2_0" };
             var s200 = new[] { "Louncher.004", "Louncher.005", "Louncher.006" };
             var l110 = new[] { "Louncher.001" };
@@ -1564,14 +1894,13 @@ namespace GslvMission.EditorTools
             var fairing = new[] { "Louncher.002", "Louncher.003" };
             var s200l110c25 = s200.Concat(l110).Concat(c25).ToArray();
 
-            Highlight("HL Pad Whole", modelRoot, cy, all);
-            Highlight("HL Pad S200", modelRoot, cy, s200);
-            Highlight("HL Pad L110", modelRoot, cy, l110);
-            Highlight("HL Pad C25", modelRoot, cy, c25);
-            Highlight("HL Pad Three Stages", modelRoot, cy, s200l110c25);
-            Highlight("HL Pad Fairing", modelRoot, cy, fairing);
-            Highlight("HL Showcase Whole", G("ShowcaseModel").transform, cy, all);
-            Highlight("HL Deploy Stage", G("DeployStage").transform, cy, c25);
+            Highlight("HL Pad Whole", modelRoot, all);
+            Highlight("HL Pad S200", modelRoot, s200);
+            Highlight("HL Pad L110", modelRoot, l110);
+            Highlight("HL Pad C25", modelRoot, c25);
+            Highlight("HL Pad Three Stages", modelRoot, s200l110c25);
+            Highlight("HL Pad Fairing", modelRoot, fairing);
+            Highlight("HL Deploy Stage", G("DeployStage").transform, c25);
 
             // the satellite (Probe) uses its own material
             var sat = NewObject("HL Deploy Satellite", FindUnder(effectsFolder, "Highlights"), typeof(PartHighlight));
@@ -1579,7 +1908,7 @@ namespace GslvMission.EditorTools
             h.renderers = satellite.GetComponentsInChildren<Renderer>(true);
             h.sourceMaterials = h.renderers.SelectMany(r => r.sharedMaterials).Where(m => m != null).Distinct().ToArray();
             h.glowMaterials = h.sourceMaterials.Select(GlowCopy).ToArray();
-            h.color = new Color(0.4f, 1f, 0.7f);
+            SatelliteGlow(h);
             Reg("HL Deploy Satellite", sat);
 
             // the user's satellite inside the rocket, also with its own materials
@@ -1590,7 +1919,7 @@ namespace GslvMission.EditorTools
                 fh.renderers = flightSat.GetComponentsInChildren<Renderer>(true).Where(r => ShownWithin(r.transform, flightSat)).ToArray();   // the merged mesh, not the parts
                 fh.sourceMaterials = fh.renderers.SelectMany(r => r.sharedMaterials).Where(m => m != null).Distinct().ToArray();
                 fh.glowMaterials = fh.sourceMaterials.Select(GlowCopy).ToArray();
-                fh.color = new Color(0.4f, 1f, 0.7f);
+                SatelliteGlow(fh);
                 Reg("HL Flight Satellite", fs);
             }
         }
@@ -1664,6 +1993,7 @@ namespace GslvMission.EditorTools
                 var exits = NozzleExits(part);   // the part's own mesh, or the meshes under it (the C25 engine is a group)
                 var at = exits[0].exit;
                 nozzleAt[nz[0]] = at;
+                if (IsKeptFlame(nz[0])) continue;
                 // the L110 and C25 burn in space, where the rocket is fast: their flames move with the nozzle (local space),
                 // so they stay a flame on the engine instead of a long streak left behind
                 if (nz[0] == "Flame L110")
@@ -1678,6 +2008,18 @@ namespace GslvMission.EditorTools
                 else if (nz[0] == "Flame C25") Reg(nz[0], MakeFlame(nz[0], part, at, 1.7f, new Color(0.88f, 0.96f, 1f), new Color(0.28f, 0.46f, 1f), 0.72f, true));
                 else Reg(nz[0], MakeFlame(nz[0], flames.transform, at, 2.0f, new Color(1f, 1f, 0.88f), new Color(1f, 0.48f, 0.055f), 1f));
             }
+
+            // The boosters' flames for their introduction: attached to the booster, so they stay on the nozzle as it moves. The launch
+            // flames above stay behind in the air instead, which is right for a rocket climbing away but not for this.
+            foreach (var booster in new[] { new[] { "R", "Louncher.005" }, new[] { "L", "Louncher.006" } })
+            {
+                string launchFlame = "Flame S200 " + booster[0], introFlame = "Intro Flame S200 " + booster[0];
+                if (IsKeptFlame(introFlame)) continue;
+                var part = FindPart(modelRoot, booster[1]);
+                if (part != null && nozzleAt.ContainsKey(launchFlame))
+                    Reg(introFlame, MakeFlame(introFlame, part, nozzleAt[launchFlame], 2.0f, new Color(1f, 1f, 0.88f), new Color(1f, 0.48f, 0.055f), 1f, true));
+            }
+            PutBackFlames(flames.transform);
 
             // Thick white smoke trails from the solid boosters while in the lower atmosphere (world space, so they stay behind).
             foreach (string side in new[] { "R", "L" })
@@ -1959,6 +2301,16 @@ namespace GslvMission.EditorTools
             }
         }
 
+        // Puts a panel with PanelReveal on the Timeline: the Control Track switches it on and off, PanelReveal fades it within that time.
+        static void RevealPanel(string key, double a, double b, params double[] flashes)
+        {
+            Show("UI", key, a, b);
+            var reveal = G(key).GetComponent<PanelReveal>();
+            reveal.start = a;
+            reveal.end = b;
+            reveal.flashes = flashes;
+        }
+
         static void Show(string laneName, string key, double a, double b, bool leaveActive = false, bool particles = false)
         {
             var go = G(key);
@@ -2198,7 +2550,11 @@ namespace GslvMission.EditorTools
             Times["s1_rocket_lit"] = a4[0] + 1.0;
             Show(CAP, "Cap GSLV", a4[0], a5[1]);
             Times["s1_caption"] = a4[0] + 1.0;
-            Show(CAP, "Cap Objective", a6[0], a6[1] + 1.0);
+            // the satellite's panels come in one by one over its voice-over and leave with the hologram; the objective, last in, stays
+            // until the voice-over has told the mission (S1_06), when its border lights up again
+            RevealPanel("Intro Applications", a2[0], a3[1] + 0.2, a2[0]);
+            RevealPanel("Intro Satellite", a2[0] + 4.5, a3[1] + 0.2, a2[0] + 4.5);
+            RevealPanel("Intro Objective", a3[0], a6[1] + 1.0, a3[0], a6[0]);
             Times["s1_objective"] = a6[0] + 1.5;
 
             // ================= SCENE 2 - Discover the GSLV
@@ -2216,21 +2572,22 @@ namespace GslvMission.EditorTools
             Times["s2_explore"] = gateExplore - 0.5;
             t = gateExplore + 0.9;
 
-            emphases.Clear();
+            partIntros.Clear();
             var c1 = Say("S2_05_S200SolidBoosters");
             Show(HL, "HL Pad S200", c1[0], c1[1] + 0.2);
             Show(CAP, "Cap S200", c1[0], c1[1] + 0.2);
-            Emphasize(c1[0] + 0.3, c1[1], "Louncher.004", "Louncher.005");   // each booster swells about its own centre
-            Emphasize(c1[0] + 0.3, c1[1], "Louncher.006");
+            PartThrusters(PartIntro(c1[0] + 0.3, c1[1], true, "Louncher.004", "Louncher.005", "Louncher.006"), "Intro Flame S200 R", "Intro Flame S200 L");   // both boosters together, side by side as they stand
             Times["s2_s200"] = c1[0] + 6.0;
             var c2 = Say("S2_06_L110LiquidStage");
             Show(HL, "HL Pad L110", c2[0], c2[1] + 0.2);
             Show(CAP, "Cap L110", c2[0], c2[1] + 0.2);
-            Emphasize(c2[0] + 0.3, c2[1], "Louncher.001");
+            PartThrusters(PartIntro(c2[0] + 0.3, c2[1], false, "Louncher.001"), "Flame L110");
             Times["s2_l110"] = c2[0] + 4.0;
             var c3 = Say("S2_07_C25CryogenicStage", 0.2);
-            Emphasize(c3[0] + 0.3, c3[1], "Louncher.009", "J_2S_J_2_0");
             var c4 = Say("S2_08_HydrogenOxygenFuel");
+            var c25Intro = PartIntro(c3[0] + 0.3, c4[1], false, "Louncher.009", "J_2S_J_2_0");   // held for the fuel labels too, as long as it stays lit
+            PartThrusters(c25Intro, "Flame C25");
+            if (c25Intro != null && O.ContainsKey("C25 Engine Model")) Show(SP, "C25 Engine Model", c25Intro.start - 0.1, c25Intro.end + 0.1);   // the flame hangs from its engine
             Show(HL, "HL Pad C25", c3[0], c4[1] + 0.2);
             Show(CAP, "Cap C25", c3[0], c3[1] + 0.1);
             Show(CAP, "Cap Hydrogen", c4[0] + 0.3, c4[1]);
@@ -2253,6 +2610,9 @@ namespace GslvMission.EditorTools
             Show(HL, "HL Pad Fairing", d1[0] + 0.3, fairingIn - 0.1);
             FairingReveal(fairingIn, fairingOut);
             if (O.ContainsKey("Satellite Model")) Show(SP, "Satellite Model", fairingIn - 0.1, fairingOut + FairingFadeTime + 0.2);
+            // once the fairing is see-through the satellite comes out to the middle of the view, and is back before it closes
+            var satIntro = flightSat != null ? PartIntro(fairingIn + FairingFadeTime, fairingOut, false, flightSat.name) : null;
+            if (satIntro != null) satIntro.scale = 2f * SatelliteIntroDistance * Mathf.Tan(0.5f * PartIntroAngle * Mathf.Deg2Rad) / Mathf.Max(satIntro.size.x, satIntro.size.y);
             Times["s3_satellite"] = fairingIn + 2.0;
             var d3 = Say("S3_03_FinalChecks");
             for (int i = 1; i <= 3; i++) readyAt[i - 1] = d3[0] + 0.3 + (i - 1) * 0.9;
@@ -2337,13 +2697,11 @@ namespace GslvMission.EditorTools
             Show(CAP, "Cap Fairing", fl.fair + 0.1, f6[1] + 1.8);
             Show(HL, "HL Pad C25", fl.c25Ign, f7[1] + 0.5);
             Show(CAP, "Cap Cryo", f7[0], f7[1]);
-            Show(SP, "Flight Path", fl.map1, s4End);
-            Show(SP, "FP Marker 1", fl.map1, s4End);
-            Show(SP, "FP Marker 2", fl.map1, s4End);
-            Show(SP, "FP Marker 3", fl.map1, s4End);
-            Show(SP, "GTO", f8[0] + 0.3, f8[0] + 0.5, true);     // stretched to the end of the Timeline below
+            Show(SP, "GTO", f8[0] + 0.3, f8[0] + 0.5, true);     // stretched to the end of the Timeline below; OrbitMotion fades its line and label once the satellite reaches the final orbit
+            Show(SP, "Final Orbit", f8[0] + 0.3, f8[0] + 0.5, true);   // stretched below: on the map from the first look at the transfer orbit to the end
             Show(CAP, "Cap GTO", f8[0], f9[0] + 2.5);
-            Show(SP, "GTO Glow", f8[0] + 1.2, f8[1] + 0.5);
+            double journeyArrival = f8[1] + 0.2;                   // the small rocket reaches the transfer orbit as the voice finishes saying it is heading there
+            Show(SP, "GTO Glow", journeyArrival, f9[0] + 3.5);     // and the orbit lights up while the next line explains it
             Times["s4_start"] = fl.swap + 2.5;
             Times["s4_track"] = f2[1];
             Times["s4_sep"] = fl.s200 + 3.0;
@@ -2358,6 +2716,15 @@ namespace GslvMission.EditorTools
             fl.flight2 = s5 - 0.1;
             Show(SP, "Map", fl.map1, fl.flight2);
             Show(SP, "MapCam", fl.map1, fl.flight2);
+            Show(SP, "Flight Path", fl.map1, fl.flight2);
+            if (journey != null)
+            {
+                Undo.RecordObject(journey, UndoName);
+                journey.director = dir;
+                journey.launchTime = f8[0] + 1.0;                  // the cut to the map has faded in
+                journey.arrivalTime = journeyArrival;
+                report.AppendLine(string.Format("Journey: rocket leaves at {0:0.0} s, arrives at {1:0.0} s, map until {2:0.0} s", journey.launchTime, journey.arrivalTime, fl.flight2));
+            }
             var g1 = Say("S5_01_FinalPartOfMission");
             var g2 = Say("S5_02_ReachedTransferOrbit");
             var g3 = Say("S5_03_MustSeparate", 0.2);
@@ -2387,8 +2754,6 @@ namespace GslvMission.EditorTools
             Show(SP, "MapCam", fl.map2, fl.map2 + 0.5, true);
             Show(SP, "Satellite", fl.map2, fl.map2 + 0.5, true);   // stretched below
             Show(HL, "HL Deploy Satellite", fl.map2 + 0.6, h3e);
-            Show(SP, "Final Orbit", h2[0], h3e);
-            Show(SP, "Transfer Arrow", h2[0], h3e);
             Show(CAP, "Cap Success", h3[0], h3[1] + 1.5);
             Times["s5_after"] = sepStart + 2.5;
             Times["s5_drift"] = h1[1] + 3.5;
@@ -2445,6 +2810,7 @@ namespace GslvMission.EditorTools
             var i1 = Say("S6_01_Congratulations");
             var i2 = Say("S6_02_QuizIntro");
             double quizStart = i2[0];
+            Show(SP, "Final Orbit Label", f8[0] + 0.3, quizStart);   // the orbit's name goes when the quiz comes up: it sat right above the panel
             Mark(quizStart, MissionCommand.Quiz, "1", "QUIZ: show question 1");
             string[,] qv = { { "S6_03_Q1_Question", "S6_04_Q1_Correct" }, { "S6_05_Q2_Question", "S6_06_Q2_Correct" }, { "S6_07_Q3_Question", "S6_08_Q3_Correct" },
                              { "S6_09_Q4_Question", "S6_10_Q4_Correct" }, { "S6_11_Q5_Question", "S6_12_Q5_Correct" } };
@@ -2462,19 +2828,17 @@ namespace GslvMission.EditorTools
             }
             Show(UI, "Quiz Panel", quizStart, quizEnd);
             t = quizEnd + 0.2;
-            Show(SP, "ShowcaseModel", t, t + 1, true);   // widened below
             double fin = t;
             var j1 = Say("S6_14_OutstandingWork");
             var j2 = Say("S6_15_StagesWorkTogether");
             var j3 = Say("S6_16_JourneyRecap");
             var j4 = Say("S6_17_MissionAccomplished", 1.0);
             Show(UI, "Achievements", fin, j4[1] + 8.0);
-            Show("Badges", "Badge Lit 1", fin + 0.8, j4[1] + 8.0);
-            Show("Badges", "Badge Lit 2", fin + 1.6, j4[1] + 8.0);
-            Show("Badges", "Badge Lit 3", j4[0], j4[1] + 8.0);
-            Show(HL, "HL Showcase Whole", j2[0], j2[1] + 0.3);
+            // each achievement ticks as its own voice-over ends (the clips' ends are the audio's real length, on the same clock as the sound)
+            Show("Badges", "Badge Lit 1", j1[1], j4[1] + 8.0);
+            Show("Badges", "Badge Lit 2", j2[1], j4[1] + 8.0);
+            Show("Badges", "Badge Lit 3", j3[1], j4[1] + 8.0);
             Show(HL, "HL Deploy Satellite", j3[0], j3[1] + 0.3);
-            Show(SP, "GTO Glow", j3[0], j3[1] + 0.3);
             Show(CAP, "Cap Complete", j4[1] + 0.2, j4[1] + 8.0);
             Times["s6_final"] = fin + 2.5;
             Times["s6_recap"] = j3[0] + 2.0;
@@ -2499,8 +2863,8 @@ namespace GslvMission.EditorTools
             // stretch the clips that had to be created before their end time was known
             // (to half a second past the end menu's marker, so the Timeline ends with the menu up over the finished scene)
             ExtendClip("GTO", end + 0.5);
+            ExtendClip("Final Orbit", end + 0.5);
             ExtendClip("Satellite", end + 0.5);
-            ExtendClip("ShowcaseModel", end + 0.5);
             ExtendClip("Map", end + 0.5);
             ExtendClip("MapCam", end + 0.5);
 
@@ -2712,8 +3076,15 @@ namespace GslvMission.EditorTools
                 upperPath.Sample(sep, sep + 10.0, 0.2, tt => u0p + Vector3.back * (35f * Mathf.Clamp01((float)((tt - sep) / 10.0))));
                 upperPath.Write(flightClip, up0);
             }
-            ApplyEmphasis(flightClip);   // the stages swelling while Scene 2 introduces them
             Play(flightTrack, flightClip, 0);
+
+            // the stages coming to the middle of the learner's view while Scene 2 introduces them, on top of the flight clip's pose
+            var intro = NewObject("Part Intro Motion", effectsFolder, typeof(PartIntroMotion)).GetComponent<PartIntroMotion>();
+            intro.director = dir;
+            intro.viewpoint = rig;
+            intro.moveSeconds = PartIntroMove;
+            intro.viewAngle = PartIntroAngle;
+            intro.entries = partIntros.ToArray();
             report.AppendLine(string.Format("Flight: {0:0} m up when it enters space, {1:0} m travelled by C25 cut-off; S200 off {2:0.0} s, fairing {3:0.0} s, L110 off {4:0.0} s after lift-off",
                 disp(fl.swap).y, disp(fl.map1).magnitude, fl.s200 - lift, fl.fair - lift, fl.l110Sep - lift));
 
@@ -2756,8 +3127,8 @@ namespace GslvMission.EditorTools
             Play(cloudTrack, cloudClip, 0);
 
             // ---- learner camera on the launch pad (dolly offsets; the learner keeps facing the rocket, only the position moves).
-            // Still while the hologram is beside the learner, a slow reveal, a crane past each stage after EXPLORE,
-            // up to the fairing, down to a low launch angle, then it rides up with the rocket.
+            // Still while the hologram is beside the learner, a slow reveal, still again while the stages are introduced after EXPLORE
+            // (the stages come to the learner: Part Intro Motion), up to the fairing, down to a low launch angle, then it rides up with the rocket.
             var rb = WorldBounds(modelRoot);
             float h = rb.size.y;
             Vector3 axis = new Vector3(rb.center.x, 0f, rb.center.z);
@@ -2766,24 +3137,22 @@ namespace GslvMission.EditorTools
             toLearner.y = 0f;
             toLearner.Normalize();
             Func<float, float, Vector3> E = (dist, y) => axis + toLearner * dist + Vector3.up * y - rigRest;   // eye at 'dist' from the rocket, height 'y'
-            float yS200 = PartBounds(modelRoot, "Louncher.004", "Louncher.005", "Louncher.006").center.y;
-            float yL110 = PartBounds(modelRoot, "Louncher.001").center.y + 1f;
-            float yC25 = PartBounds(modelRoot, "Louncher.009").center.y;
             float yFairing = PartBounds(modelRoot, "Louncher.002", "Louncher.003").center.y;
             float yLaunch = rb.min.y + 0.22f * h, dLaunch = 2.05f * h;
             double c0 = gateExplore + 0.2;
+
+            // ---- where the introduced stages come to: the ground between the rocket and the learner sets how low they can go
+            Vector3 introEye = E(2.2f * h, rigRest.y + 1.5f) + rigRest;
+            Vector3 introAhead = Vector3.ProjectOnPlane(rig.forward, Vector3.up).normalized;
+            intro.groundY = HighestGround(axis, introEye, 10f, rb.min.y);
+            ReportPartIntros(intro, introEye, introAhead, rb.min.y);
 
             var pad = new CamPath();
             pad.Key(0, Vector3.zero);
             pad.Key(V("S1_03_SatelliteNeedsRocket")[1] + 0.3, Vector3.zero);
             pad.Key(V("S1_06_MissionIntro")[1], E(2.2f * h, rigRest.y + 1.5f));                // slow reveal: "Meet GSLV"
             pad.Key(c0, E(2.2f * h, rigRest.y + 1.5f));                                          // waits for EXPLORE
-            pad.Key(c0 + 6.5, E(1.1f * h, yS200));                                               // S200 boosters
-            pad.Key(V("S2_06_L110LiquidStage")[0], E(1.1f * h, yS200));
-            pad.Key(V("S2_06_L110LiquidStage")[0] + 3.5, E(1.05f * h, yL110));                   // L110 core
-            pad.Key(V("S2_07_C25CryogenicStage")[0], E(1.05f * h, yL110));
-            pad.Key(V("S2_07_C25CryogenicStage")[0] + 3.5, E(1.05f * h, yC25));                  // C25, held for the fuel labels
-            pad.Key(V("S2_09_AllStagesTogether")[0], E(1.05f * h, yC25));
+            pad.Key(V("S2_09_AllStagesTogether")[0], E(2.2f * h, rigRest.y + 1.5f));            // still while each stage is introduced
             pad.Key(V("S2_09_AllStagesTogether")[0] + 4.5, E(1.85f * h, rb.center.y));          // all three stages together
             pad.Key(V("S3_01_SatelliteInFairing")[0], E(1.85f * h, rb.center.y));
             pad.Key(V("S3_01_SatelliteInFairing")[0] + 3.5, E(1.4f * h, yFairing));              // up to the fairing
@@ -2863,10 +3232,47 @@ namespace GslvMission.EditorTools
             pad.Write(cam, "Camera Dolly");
             Play(camTrack, cam, 0);
             Func<double, float> gap = tt => ((tt < lift ? launchEye : eyeAt[Mathf.Clamp((int)((tt - lift) / dtSim), 0, nCam - 1)]) - focus(tt)).magnitude;
-            report.AppendLine(string.Format("Camera (pad): reveal to {0:0} m, stage crane at {1:0} m (S200 {2:0.0} / L110 {3:0.0} / C25 {4:0.0} / fairing {5:0.0} m high), launch view {6:0} m",
-                2.2f * h, 1.1f * h, yS200, yL110, yC25, yFairing, dLaunch));
+            report.AppendLine(string.Format("Camera (pad): reveal and stage introductions at {0:0} m, fairing {1:0.0} m high, launch view {2:0} m", 2.2f * h, yFairing, dLaunch));
             report.AppendLine(string.Format("Camera (chase): {0:0} m from the rocket at lift-off+10 s, {1:0} m at S200 separation, {2:0} m at L110 separation, {3:0} m before deployment, {4:0} m from the satellite after it",
                 gap(lift + 10), gap(fl.s200), gap(fl.l110Sep), gap(sep - 1), gap(sep + 8)));
+
+            // ---- the atmosphere readouts stay beside the rocket: for each moment of the climb, the bearing of the left edge of what is left
+            // of the stack at the panels' height, seen from the eyes; the panels' right edge stays ReadoutGap short of it. Parts of the stack
+            // above or below the panels can't touch them, so they don't push them away.
+            float topEl = Mathf.Atan2(LayerPanelY + 95f * Px * ReadoutScale, ReadoutDistance) * Mathf.Rad2Deg, bottomEl = Mathf.Atan2(TelemetryY - 85f * Px * ReadoutScale, ReadoutDistance) * Mathf.Rad2Deg;
+            float halfPanel = Mathf.Atan2(450f * Px * ReadoutScale, ReadoutDistance) * Mathf.Rad2Deg;
+            Func<double, float> panelBearing = tt =>
+            {
+                Vector3 eye = eyeAt[Mathf.Clamp((int)((tt - lift) / dtSim), 0, nCam - 1)];
+                float tail = 0.55f * sm(fl.l110Sep, fl.l110Sep + 3, tt), nose = 1f - 0.12f * sm(fl.fair, fl.fair + 3, tt);
+                float radius = Mathf.Lerp(4.5f, 2.2f, sm(fl.s200, fl.s200 + 3, tt));
+                float edge = float.MaxValue;
+                for (int i = 0; i <= 16; i++)
+                {
+                    Vector3 p = pivotRest + disp(tt) + attitude(tt) * (Vector3.up * (Mathf.Lerp(tail, nose, i / 16f) * h)) - eye;
+                    float ahead = Vector3.Dot(p, fwd), right = Vector3.Dot(p, downrange), flat = new Vector2(ahead, right).magnitude;
+                    float el = Mathf.Atan2(p.y, flat) * Mathf.Rad2Deg;
+                    if (el < bottomEl - ReadoutGap || el > topEl + ReadoutGap) continue;
+                    edge = Mathf.Min(edge, (Mathf.Atan2(right, ahead) - Mathf.Atan2(radius, flat)) * Mathf.Rad2Deg);
+                }
+                return Mathf.Clamp(edge - ReadoutGap - halfPanel, ReadoutMinBearing, ReadoutMaxBearing);
+            };
+            const double ReadoutStep = 0.25;
+            var raw = Enumerable.Range(0, (int)Math.Ceiling((fl.map1 - lift) / ReadoutStep) + 1).Select(i => panelBearing(lift + i * ReadoutStep)).ToArray();
+            var held = raw.Select((_, i) => raw.Skip(Math.Max(0, i - 4)).Take(9).Min()).ToArray();                 // gets out of the rocket's way a little early
+            var eased = held.Select((_, i) => held.Skip(Math.Max(0, i - 6)).Take(13).Average()).ToArray();         // and turns slowly
+            var rk = new List<Keyframe> { K(0, eased[0]) };
+            for (int i = 0; i < eased.Length; i++)
+            {
+                int a = Math.Max(0, i - 1), b = Math.Min(eased.Length - 1, i + 1);
+                float slope = (float)((eased[b] - eased[a]) / ((b - a) * ReadoutStep));
+                rk.Add(new Keyframe((float)(lift + i * ReadoutStep), eased[i], slope, slope));
+            }
+            rk.Add(K(fl.flight2 - 0.2, ReadoutRestBearing));   // the orbit map is on between these two: nobody sees the turn
+            rk.Add(K(tEnd, ReadoutRestBearing));
+            readouts.bearing = new AnimationCurve(rk.ToArray());
+            report.AppendLine(string.Format("Atmosphere readouts: centred {0:0.0} to {1:0.0} degrees from the learner's forward during the climb, rocket at {2:0.0} degrees at lift-off+10 s",
+                eased.Min(), eased.Max(), Mathf.Atan2(Vector3.Dot(focus(lift + 10) - eyeAt[Mathf.Clamp((int)(10.0 / dtSim), 0, nCam - 1)], downrange), Vector3.Dot(focus(lift + 10) - eyeAt[Mathf.Clamp((int)(10.0 / dtSim), 0, nCam - 1)], fwd)) * Mathf.Rad2Deg));
 
             // ---- camera on the orbit map, keyed in the space set's frame (origin = where the learner's eyes were when space was shown,
             // +Z = the rig's forward): the authored wide view, then a slow push towards Earth for the finale.
@@ -2915,6 +3321,10 @@ namespace GslvMission.EditorTools
                 motion.startTime = fl.map2 + 0.9;                     // once the cut to the map has faded in
                 motion.transferSeconds = (float)Math.Max(6.0, V("S5_06_ReachFinalOrbit")[1] - motion.startTime);
                 motion.orbitPeriod = 40f;
+                motion.transferLine = gto.GetComponent<LineRenderer>();
+                var label = gto.Find("Label");
+                motion.transferLabel = label != null ? label.GetComponent<TMP_Text>() : null;
+                if (motion.transferLabel == null) warnings.Add("the transfer orbit's label was not found: it stays on when the orbit fades");
             }
         }
 
@@ -2943,54 +3353,87 @@ namespace GslvMission.EditorTools
             }
         }
 
-        // Parts that swell a little while the voice-over introduces them (Timeline times a..b). Keyed into the flight clip
-        // by ApplyEmphasis once its other curves are written; the jettisons come long after, so the rest pose is kept.
-        class Emphasis
+        // The terrain's highest point in a strip from a to b, 'halfWidth' to each side; 'fallback' where there is no terrain.
+        static float HighestGround(Vector3 a, Vector3 b, float halfWidth, float fallback)
         {
-            public double a, b;
-            public string[] names;
-        }
-
-        static readonly List<Emphasis> emphases = new List<Emphasis>();
-
-        static void Emphasize(double a, double b, params string[] names)
-        {
-            b = Math.Max(b, a + 2 * EmphasisRamp + 0.2);   // room to swell, hold a moment and settle
-            emphases.Add(new Emphasis { a = a, b = b, names = names });
-        }
-
-        // Each group scales about the centre of its meshes: every part keeps its own parent, so the centre is taken in that
-        // parent's space (position c + k (p - c), scale k s); a part inside another part of the group follows its parent.
-        static void ApplyEmphasis(AnimationClip clip)
-        {
-            foreach (var e in emphases)
-            {
-                var parts = e.names.Select(n => FindPart(modelRoot, n)).Where(p => p != null).ToArray();
-                parts = parts.Where(p => !parts.Any(q => q != p && p.IsChildOf(q))).ToArray();
-                var withMesh = parts.Where(p => p.GetComponentsInChildren<Renderer>().Length > 0).ToArray();
-                if (withMesh.Length == 0) { warnings.Add("emphasis: " + string.Join(", ", e.names) + " not found"); continue; }
-                var bounds = WorldBounds(withMesh[0]);
-                foreach (var p in withMesh) bounds.Encapsulate(WorldBounds(p));
-                foreach (var p in parts)
+            var terrains = scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<Terrain>(true)).Where(x => x.terrainData != null).ToArray();
+            Vector3 flat = b - a;
+            flat.y = 0f;
+            Vector3 side = Vector3.Cross(Vector3.up, flat).normalized;
+            float top = float.MinValue;
+            for (int i = 0; i <= 40; i++)
+                for (int s = -2; s <= 2; s++)
                 {
-                    string path = AnimationUtility.CalculateTransformPath(p, padHost);
-                    Vector3 c = p.parent.InverseTransformPoint(bounds.center), p0 = p.localPosition, s0 = p.localScale;
-                    SwellKeys(clip, path, "m_LocalPosition", p0, c + EmphasisScale * (p0 - c), e.a, e.b);
-                    SwellKeys(clip, path, "m_LocalScale", s0, s0 * EmphasisScale, e.a, e.b);
+                    Vector3 p = Vector3.Lerp(a, b, i / 40f) + side * (halfWidth * s / 2f);
+                    foreach (var tr in terrains)
+                    {
+                        Vector3 o = tr.transform.position, size = tr.terrainData.size;
+                        if (p.x >= o.x && p.x <= o.x + size.x && p.z >= o.z && p.z <= o.z + size.z)
+                            top = Mathf.Max(top, tr.SampleHeight(p) + o.y);
+                    }
                 }
+            return top == float.MinValue ? fallback : top;
+        }
+
+        // What each introduced stage does, and the scenery its path runs into, for the build report.
+        static void ReportPartIntros(PartIntroMotion intro, Vector3 eye, Vector3 ahead, float padY)
+        {
+            var scenery = FindRoot("ENVIRONMENT").GetComponentsInChildren<MeshRenderer>(false).Where(r => r.enabled).ToArray();
+            report.AppendLine(string.Format("Part intro: eye {0:0.0} m high, pad base {1:0.0}, highest ground towards the learner {2:0.0}, rocket {3:0.0} degrees from straight ahead",
+                eye.y, padY, intro.groundY, Vector3.SignedAngle(ahead, new Vector3(modelRoot.position.x - eye.x, 0f, modelRoot.position.z - eye.z), Vector3.up)));
+            foreach (var e in partIntros)
+            {
+                Vector3 to = intro.Focus(e, eye, ahead);
+                var names = new HashSet<string>();
+                // from where it has left the pad: the path rises or stays level by then, so this looks along the arrival height
+                Vector3 clear = new Vector3(e.centre.x, Mathf.Max(e.centre.y, to.y), e.centre.z);
+                for (int s = 1; s <= 10; s++)
+                {
+                    var box = new Bounds(Vector3.Lerp(clear, to, s / 10f), e.size);
+                    foreach (var r in scenery)
+                        if (r.bounds.Intersects(box)) names.Add(r.name + " (top " + r.bounds.max.y.ToString("0.0") + ")");
+                }
+                report.AppendLine(string.Format("  {0}: {1:0.0} x {2:0.0} x {3:0.0} m, centre {4:0.0} m high on the pad, arrives {5:0.0} m away (from {6:0.0}), centre {7:0.0} m high, {8:0.0} degrees above eye level; in its way: {9}",
+                    e.name, e.size.x, e.size.y, e.size.z, e.centre.y, (new Vector3(to.x - eye.x, 0f, to.z - eye.z)).magnitude, (new Vector3(e.centre.x - eye.x, 0f, e.centre.z - eye.z)).magnitude,
+                    to.y, Mathf.Atan2(to.y - eye.y, (new Vector3(to.x - eye.x, 0f, to.z - eye.z)).magnitude) * Mathf.Rad2Deg, names.Count == 0 ? "nothing" : string.Join("; ", names.OrderBy(n => n).Take(14))));
             }
         }
 
-        // Adds rest -> peak -> rest keys (eased) between a and b to a Transform curve, which holds 'rest' there.
-        static void SwellKeys(AnimationClip clip, string path, string property, Vector3 rest, Vector3 peak, double a, double b)
+        // Parts that come to the middle of the learner's view while the voice-over introduces them (Timeline times a..b), played by
+        // Part Intro Motion. A part inside another part of the group follows its parent.
+        static readonly List<PartIntroMotion.Entry> partIntros = new List<PartIntroMotion.Entry>();
+
+        static PartIntroMotion.Entry PartIntro(double a, double b, bool riseFirst, params string[] names)
         {
-            for (int i = 0; i < 3; i++)
+            var parts = names.Select(n => FindPart(modelRoot, n)).Where(p => p != null).ToArray();
+            parts = parts.Where(p => !parts.Any(q => q != p && p.IsChildOf(q))).ToArray();
+            var withMesh = parts.Where(p => p.GetComponentsInChildren<Renderer>().Length > 0).ToArray();
+            if (withMesh.Length == 0) { warnings.Add("part intro: " + string.Join(", ", names) + " not found"); return null; }
+            var bounds = WorldBounds(withMesh[0]);
+            foreach (var p in withMesh) bounds.Encapsulate(WorldBounds(p));
+            var entry = new PartIntroMotion.Entry
             {
-                var binding = EditorCurveBinding.FloatCurve(path, typeof(Transform), property + "." + "xyz"[i]);
-                var curve = AnimationUtility.GetEditorCurve(clip, binding) ?? new AnimationCurve(K(0, rest[i]));
-                foreach (var k in new[] { K(a, rest[i]), K(a + EmphasisRamp, peak[i]), K(b - EmphasisRamp, peak[i]), K(b, rest[i]) })
-                    curve.AddKey(k);
-                AnimationUtility.SetEditorCurve(clip, binding, curve);
+                name = parts[0].name,
+                parts = parts,
+                centre = bounds.center,
+                size = bounds.size,
+                riseFirst = riseFirst,
+                start = a,
+                end = Math.Max(b, a + 2 * PartIntroMove + 0.2)   // room to come forward, hold a moment and go back
+            };
+            partIntros.Add(entry);
+            return entry;
+        }
+
+        // A part's engines fire while it moves and cut out as it settles, on its way out and on its way back.
+        static void PartThrusters(PartIntroMotion.Entry e, params string[] flames)
+        {
+            if (e == null) return;
+            foreach (string f in flames)
+            {
+                if (!O.ContainsKey(f)) { warnings.Add("part intro: no flame '" + f + "'"); continue; }
+                Show("Effects", f, e.start, e.start + PartIntroMove - 0.2);
+                Show("Effects", f, e.end - PartIntroMove, e.end - 0.2);
             }
         }
 
@@ -3057,6 +3500,9 @@ namespace GslvMission.EditorTools
             Reg("Flight Path", flightPath.gameObject);
             Reg("GTO", gto.gameObject);
             if (finalOrbit != null) Reg("Final Orbit", finalOrbit.gameObject);
+            var finalLabel = finalOrbit != null ? finalOrbit.Find("Label") : null;
+            if (finalLabel != null) Reg("Final Orbit Label", finalLabel.gameObject);
+            else warnings.Add("the final orbit's label was not found: it stays on through the quiz");
             if (arrow != null) Reg("Transfer Arrow", arrow.gameObject);
             Reg("Satellite", satellite.gameObject);
             var fps = new[] { fp1, fp2, fp3 };

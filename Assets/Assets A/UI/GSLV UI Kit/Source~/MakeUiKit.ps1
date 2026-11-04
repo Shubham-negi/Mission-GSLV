@@ -371,6 +371,117 @@ Icon 'Icon_Cap' 0 {
     $b = Brush $White; $g.FillEllipse($b, (Rect 101 86 14 14)); $b.Dispose()
 }
 
+# ------------------------------------------------------------------ satellite introduction (Scene 1)
+Icon 'Icon_TV' 0 {
+    param($g)
+    $pen = NewPen $White 8
+    $g.DrawPath($pen, (Shape 12 36 104 66 0 10))
+    $g.DrawLine($pen, (Pt 64 34), (Pt 44 12)); $g.DrawLine($pen, (Pt 64 34), (Pt 84 12))
+    $g.DrawLine($pen, (Pt 42 116), (Pt 86 116))
+    $pen.Dispose()
+    $b = Brush $White; $g.FillPath($b, (Shape 25 49 78 40 0 5)); $b.Dispose()
+}
+Icon 'Icon_Signal' 0 {
+    param($g)
+    $pen = NewPen $White 8
+    $g.DrawLine($pen, (Pt 64 48), (Pt 42 118)); $g.DrawLine($pen, (Pt 64 48), (Pt 86 118)); $g.DrawLine($pen, (Pt 51 92), (Pt 77 92))
+    $pen.Dispose()
+    $b = Brush $White; $g.FillEllipse($b, (Rect 53 30 22 22)); $b.Dispose()
+    $pen = NewPen $White 7
+    foreach ($r in 30, 48) {
+        $g.DrawArc($pen, (Rect (64 - $r) (41 - $r) (2 * $r) (2 * $r)), [float]-40, [float]80)
+        $g.DrawArc($pen, (Rect (64 - $r) (41 - $r) (2 * $r) (2 * $r)), [float]140, [float]80)
+    }
+    $pen.Dispose()
+}
+function Cloud($g, [double]$grow) {
+    $b = Brush $White
+    foreach ($e in @(@(10, 70, 42, 42), @(32, 50, 54, 54), @(66, 64, 48, 48))) { $g.FillEllipse($b, (Rect ($e[0] - $grow) ($e[1] - $grow) ($e[2] + 2 * $grow) ($e[3] + 2 * $grow))) }
+    $g.FillRectangle($b, (Rect (30 - $grow) (86 - $grow) (64 + 2 * $grow) (26 + 2 * $grow)))
+    $b.Dispose()
+}
+Icon 'Icon_Weather' 0 {
+    param($g)
+    $b = Brush $White; $g.FillEllipse($b, (Rect 60 16 42 42)); $b.Dispose()
+    $pen = NewPen $White 6
+    foreach ($a in 0, 45, 90, 135, 180, 225, 270, 315) {
+        $r = $a * [math]::PI / 180
+        $g.DrawLine($pen, (Pt (81 + 28 * [math]::Cos($r)) (37 + 28 * [math]::Sin($r))), (Pt (81 + 37 * [math]::Cos($r)) (37 + 37 * [math]::Sin($r))))
+    }
+    $pen.Dispose()
+} { param($g) Cloud $g 6 }
+# the cloud drawn after the cut, so a clear gap separates it from the sun
+$c = New-Bmp 128 128
+$src = [System.Drawing.Image]::FromFile((Join-Path $Out 'Icon_Weather.png')); $c.g.DrawImage($src, 0, 0, 128, 128); $src.Dispose()
+Cloud $c.g 0
+$script:made = @($script:made | Where-Object { $_ -ne 'Icon_Weather' })
+Save $c 'Icon_Weather'
+
+# more see-through glass for the hologram to stand in front of, the gold objective panel, and a border alone (tinted and flashed in Unity)
+Skin 'Panel_Glass' (SkinStyle (Col 16 58 120 0.76) (Col 6 26 66 0.9) (Col 90 215 255) (Col 40 190 255) 0.6 'TL BR' 8 (Col 170 240 255))
+Skin 'Panel_Gold' (SkinStyle (Col 18 46 92 0.93) (Col 6 18 42 0.93) (Col 255 196 64) (Col 255 170 40) 0.5 'TL BR' 8 (Col 255 232 160))
+$c = New-Bmp 160 160
+$p = Shape 16 16 128 128 18 8 'TL BR'
+Glow $c.g $p $White 15 0.9
+$pen = NewPen $White 3; $c.g.DrawPath($pen, $p); $pen.Dispose()
+Save $c 'Panel_Edge'
+
+# Earth's edge, seen from orbit (white, tinted in Unity): a thin bright arc, fading out below it
+$c = New-Bmp 512 180
+$e = New-Object System.Drawing.Drawing2D.GraphicsPath; $e.AddEllipse((Rect -220 28 952 620))
+$c.g.SetClip($e); $s = VGrad (Rect 0 20 512 160) (Col 255 255 255 0.42) (Col 255 255 255 0); $c.g.FillRectangle($s, (Rect 0 0 512 180)); $s.Dispose(); $c.g.ResetClip()
+$arc = New-Object System.Drawing.Drawing2D.GraphicsPath; $arc.AddArc((Rect -220 28 952 620), [float]212, [float]116)
+Glow $c.g $arc $White 14 0.5
+$pen = NewPen $White 2.5; $c.g.DrawPath($pen, $arc); $pen.Dispose()
+Save $c 'Earth_Limb'
+
+# curved arrow from the satellite towards Earth (white, tinted in Unity), growing out of nothing at its start
+$c = New-Bmp 256 128
+$lg = New-Object System.Drawing.Drawing2D.LinearGradientBrush((Rect 0 0 257 128), (Col 255 255 255 0.1), (Col 255 255 255 1), [System.Drawing.Drawing2D.LinearGradientMode]::Horizontal)
+$pen = New-Object System.Drawing.Pen($lg, [float]6); $pen.StartCap = 'Round'; $pen.EndCap = 'Round'
+$c.g.DrawBezier($pen, (Pt 10 96), (Pt 78 18), (Pt 160 14), (Pt 226 62)); $pen.Dispose(); $lg.Dispose()
+$b = Brush $White; $c.g.FillPath($b, (Poly @((Pt 246 78), (Pt 208 74), (Pt 232 42)))); $b.Dispose()
+Save $c 'Arc_Arrow'
+
+# Earth as a globe, from the project's own Earth texture, over India, lit from the upper left, with a thin blue atmosphere
+$earthFile = Join-Path $Out '..\..\Space\Textures\Earth_Diff.jpg'
+$tw = 1024; $th = 512
+$tex = New-Object System.Drawing.Bitmap($tw, $th, [System.Drawing.Imaging.PixelFormat]::Format24bppRgb)
+$tg = [System.Drawing.Graphics]::FromImage($tex); $tg.InterpolationMode = 'HighQualityBicubic'
+$src = [System.Drawing.Image]::FromFile([System.IO.Path]::GetFullPath($earthFile)); $tg.DrawImage($src, 0, 0, $tw, $th); $src.Dispose(); $tg.Dispose()
+$td = $tex.LockBits((New-Object System.Drawing.Rectangle(0, 0, $tw, $th)), 'ReadOnly', [System.Drawing.Imaging.PixelFormat]::Format24bppRgb)
+$tb = New-Object byte[] ($td.Stride * $th); [Runtime.InteropServices.Marshal]::Copy($td.Scan0, $tb, 0, $tb.Length); $tStride = $td.Stride; $tex.UnlockBits($td); $tex.Dispose()
+$size = 256; $R = 108.0; $cen = 127.5; $glowPx = 18.0
+$lat0 = 18 * [math]::PI / 180; $lon0 = 78 * [math]::PI / 180
+$cl = [math]::Cos($lat0); $sl = [math]::Sin($lat0)
+$lx = -0.55; $ly = 0.5; $lz = 0.67
+$c = New-Bmp $size $size; $c.g.Dispose()
+$d = $c.bmp.LockBits((New-Object System.Drawing.Rectangle(0, 0, $size, $size)), 'WriteOnly', [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
+$o = New-Object byte[] ($d.Stride * $size)
+for ($y = 0; $y -lt $size; $y++) {
+    for ($x = 0; $x -lt $size; $x++) {
+        $nx = ($x - $cen) / $R; $ny = ($cen - $y) / $R; $rr = $nx * $nx + $ny * $ny; $i = $y * $d.Stride + $x * 4
+        if ($rr -ge 1.0) {
+            $over = ([math]::Sqrt($rr) - 1.0) * $R
+            if ($over -lt $glowPx) { $k = 1.0 - $over / $glowPx; $o[$i] = 255; $o[$i + 1] = 190; $o[$i + 2] = 90; $o[$i + 3] = [byte](190 * $k * $k) }
+            continue
+        }
+        $nz = [math]::Sqrt(1.0 - $rr)
+        $yy = $ny * $cl + $nz * $sl; $zz = $nz * $cl - $ny * $sl
+        $u = (([math]::Atan2($nx, $zz) + $lon0) / (2 * [math]::PI) + 0.5) % 1.0; if ($u -lt 0) { $u += 1.0 }
+        $v = 0.5 - [math]::Asin([math]::Max(-1.0, [math]::Min(1.0, $yy))) / [math]::PI
+        $ti = [math]::Min($th - 1, [int]($v * $th)) * $tStride + [math]::Min($tw - 1, [int]($u * $tw)) * 3
+        $shade = 0.28 + 0.95 * [math]::Max(0.0, $nx * $lx + $ny * $ly + $nz * $lz)
+        $rim = [math]::Pow(1.0 - $nz, 3) * 0.9
+        $o[$i] = [byte][math]::Min([double]255, [double]($tb[$ti] * $shade + 255 * $rim))
+        $o[$i + 1] = [byte][math]::Min([double]255, [double]($tb[$ti + 1] * $shade + 190 * $rim))
+        $o[$i + 2] = [byte][math]::Min([double]255, [double]($tb[$ti + 2] * $shade + 90 * $rim))
+        $o[$i + 3] = 255
+    }
+}
+[Runtime.InteropServices.Marshal]::Copy($o, 0, $d.Scan0, $o.Length); $c.bmp.UnlockBits($d)
+$c.bmp.Save((Join-Path $Out 'Earth_Globe.png'), [System.Drawing.Imaging.ImageFormat]::Png); $c.bmp.Dispose(); $script:made += 'Earth_Globe'
+
 # ------------------------------------------------------------------ preview sheet (written next to this script, not imported)
 $cols = 8; $cell = 190
 $rows = [math]::Ceiling($script:made.Count / $cols)
