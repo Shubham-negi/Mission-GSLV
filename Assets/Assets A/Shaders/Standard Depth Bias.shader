@@ -51,7 +51,7 @@ Shader "GSLV/Standard (Depth Bias)"
 		[HideInInspector] _ZWrite ("__zw", Float) = 1.0
 
 		_OffsetFactor ("Depth Bias Slope", Float) = -1.0
-		_OffsetUnits ("Depth Bias Units", Float) = -2.0
+		_OffsetUnits ("Depth Bias Units", Float) = 0.0   // keep 0: on the headset a constant bias draws parts of the surface pure black
 	}
 
 	CGINCLUDE

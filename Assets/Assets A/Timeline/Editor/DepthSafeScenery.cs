@@ -42,7 +42,7 @@ namespace GslvMission.EditorTools
         const float MaxPush = 0.3f, PushStep = 0.01f;
         const float PushPerMetre = 0.0015f;   // a move this small for each metre to the nearest viewpoint stays about a pixel
         const float Sink = 0.3f, OnGround = 0.6f;   // the terrain goes Sink under faces lying within OnGround of it
-        const float RoadOffsetUnits = -16f;   // the road's depth bias, in depth-buffer steps
+        const float RoadOffsetUnits = 0f;   // the road's depth bias is slope only: on the headset any constant part draws parts of the road pure black
 
         static DepthSafeScenery()
         {
